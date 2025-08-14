@@ -1,57 +1,56 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SAT Coach</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My One-Page Site</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">SAT Coach</div>
+  <header class="site-header">
+    <div class="container header-inner">
+      <h1 class="logo">MySite</h1>
+      <button class="menu-toggle" aria-expanded="false" aria-controls="main-nav">☰</button>
+      <nav id="main-nav" class="nav">
+        <a href="#about">About</a>
+        <a href="#features">Features</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
   </header>
 
   <main>
-    <section class="menu">
-      <button id="math-btn">Math Practice</button>
-      <button id="reading-btn">Reading/Writing Practice</button>
-      <button id="flashcards-btn">Vocab Flashcards</button>
+    <section class="hero">
+      <div class="container">
+        <h2>Build something simple. Build it well.</h2>
+        <p>Practice page for your 3-day build.</p>
+        <a class="btn" href="#contact">Get in touch</a>
+      </div>
     </section>
 
-    <section id="quiz-section" class="hidden">
-      <div id="question-container">
-        <h2 id="question-text"></h2>
-        <div id="choices"></div>
-      </div>
-      <button id="next-btn" class="hidden">Next Question</button>
-      <div id="explanation" class="hidden"></div>
-      <div id="score-container">Score: <span id="score">0</span></div>
+    <section id="features" class="cards container">
+      <article class="card"><h3>Fast</h3><p>Loads quickly and looks great on phones.</p></article>
+      <article class="card"><h3>Simple</h3><p>Plain HTML + CSS + tiny JS.</p></article>
+      <article class="card"><h3>Deploy</h3><p>Live on GitHub Pages in minutes.</p></article>
     </section>
 
-    <section id="flashcard-section" class="hidden">
-      <div id="flashcard">
-        <h2 id="word"></h2>
-        <p id="definition"></p>
-        <button id="next-flashcard">Next</button>
-        <button id="mark-known">Mark as Known</button>
-      </div>
+    <section id="contact" class="container contact">
+      <h3>Contact</h3>
+      <form id="contactForm">
+        <label for="name">Name</label>
+        <input id="name" name="name" required />
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required />
+        <button class="btn" type="submit">Send</button>
+      </form>
     </section>
   </main>
 
-  <footer>
-    <p>Free SAT prep – no login required!</p>
+  <footer class="site-footer container">
+    <small>Made with ❤️ — Your Name</small>
   </footer>
 
   <script src="script.js"></script>
 </body>
 </html>
-
-<section id="answer-section" class="hidden">
-  <div id="answer-content">
-    <h2 id="answer-question"></h2>
-    <p><b>Your Answer:</b> <span id="answer-selected"></span></p>
-    <p><b>Correct Answer:</b> <span id="answer-correct"></span></p>
-    <div id="answer-explanation"></div>
-    <button id="back-to-quiz">Back to Quiz</button>
-  </div>
-</section>
