@@ -93,3 +93,33 @@ footer {
   padding: 12px;
   background: #ddd;
 }
+
+#answer-section {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+#answer-explanation {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f0f0f0;
+  border-radius: 8px;
+}
+
+#back-to-quiz {
+  margin-top: 16px;
+  padding: 10px 16px;
+  background: #1a73e8;
+  color: #fff;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+#back-to-quiz:hover {
+  background: #155ab6;
+}

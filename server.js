@@ -148,3 +148,54 @@ document.getElementById('mark-known').addEventListener('click', () => {
     showFlashcard();
   }
 });
+
+// DOM elements for answer section
+const answerSection = document.getElementById('answer-section');
+const answerQuestion = document.getElementById('answer-question');
+const answerSelected = document.getElementById('answer-selected');
+const answerCorrect = document.getElementById('answer-correct');
+const answerExplanation = document.getElementById('answer-explanation');
+const backToQuizBtn = document.getElementById('back-to-quiz');
+
+// Update selectAnswer to redirect to answer-section
+function selectAnswer(button, question) {
+  const buttons = document.querySelectorAll('.choice-btn');
+  buttons.forEach(b => b.disabled = true);
+
+  const userChoice = button.textContent;
+
+  // Show inline coloring
+  if(userChoice === question.answer){
+    button.classList.add('correct');
+    score++;
+    scoreSpan.textContent = score;
+  } else {
+    button.classList.add('wrong');
+    // highlight correct
+    buttons.forEach(b => { if(b.textContent === question.answer) b.classList.add('correct') });
+  }
+
+  // Populate the deep explanation section
+  answerQuestion.textContent = question.question;
+  answerSelected.textContent = userChoice;
+  answerCorrect.textContent = question.answer;
+  answerExplanation.innerHTML = question.explanation + "<br><br>" + generateStepByStep(question);
+
+  // Hide quiz, show answer
+  quizSection.classList.add('hidden');
+  answerSection.classList.remove('hidden');
+}
+
+// Example function to generate more detailed step-by-step explanation
+function generateStepByStep(question){
+  // Customize step-by-step logic per question type
+  // For now, we just return a formatted explanation
+  return `<b>Step-by-step:</b> <br>1. Read the question carefully.<br>2. Identify variables.<br>3. Apply formulas or grammar rules.<br>4. Solve systematically.<br>5. Check your answer matches: ${question.answer}`;
+}
+
+// Back to quiz button
+backToQuizBtn.addEventListener('click', () => {
+  answerSection.classList.add('hidden');
+  quizSection.classList.remove('hidden');
+  nextBtn.classList.remove('hidden'); // allow moving to next question
+});
