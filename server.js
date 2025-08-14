@@ -88,21 +88,6 @@ function showQuestion() {
   });
 }
 
-// Handle answer selection
-function selectAnswer(button, question) {
-  const buttons = document.querySelectorAll('.choice-btn');
-  buttons.forEach(b => b.disabled = true);
-
-  if(button.textContent === question.answer){
-    button.classList.add('correct');
-    score++;
-    scoreSpan.textContent = score;
-  } else {
-    button.classList.add('wrong');
-    // highlight correct
-    buttons.forEach(b => { if(b.textContent === question.answer) b.classList.add('correct') });
-  }
-
   explanationDiv.textContent = question.explanation;
   explanationDiv.classList.remove('hidden');
   nextBtn.classList.remove('hidden');
@@ -164,14 +149,13 @@ function selectAnswer(button, question) {
 
   const userChoice = button.textContent;
 
-  // Show inline coloring
+  // Update inline color feedback (optional, can keep)
   if(userChoice === question.answer){
     button.classList.add('correct');
     score++;
     scoreSpan.textContent = score;
   } else {
     button.classList.add('wrong');
-    // highlight correct
     buttons.forEach(b => { if(b.textContent === question.answer) b.classList.add('correct') });
   }
 
