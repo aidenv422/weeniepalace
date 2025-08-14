@@ -1,398 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dogbook</title>
-  <style>
-    :root{
-      --bg:#0f172a;          /* slate-900 */
-      --panel:#111827;       /* gray-900 */
-      --muted:#9ca3af;       /* gray-400 */
-      --text:#e5e7eb;        /* gray-200 */
-      --brand:#22c55e;       /* emerald-500 */
-      --brand-600:#16a34a;   /* emerald-600 */
-      --accent:#38bdf8;      /* sky-400 */
-      --card:#0b1222;        /* dark blue-ish */
-      --border:#1f2937;      /* gray-800 */
-      --like:#f59e0b;        /* amber-500 */
-      --danger:#ef4444;      /* red-500 */
-      --ok:#10b981;          /* teal-500 */
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
-      background: radial-gradient(1200px 800px at 80% -20%, #0b2b3b, transparent),
-                  radial-gradient(1000px 600px at -10% -10%, #0f1f2f, transparent),
-                  var(--bg);
-      color:var(--text);
-    }
-    /* Header */
-    .topbar{
-      position:sticky; top:0; z-index:50;
-      display:flex; align-items:center; gap:12px;
-      padding:12px 16px; border-bottom:1px solid var(--border);
-      background:linear-gradient(180deg, rgba(17,24,39,.9), rgba(17,24,39,.85));
-      backdrop-filter: blur(6px);
-    }
-    .logo{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.3px}
-    .logo-badge{display:grid; place-items:center; width:36px; height:36px; border-radius:12px; background:linear-gradient(135deg, var(--brand), var(--accent)); box-shadow: 0 6px 16px rgba(56,189,248,.2)}
-    .logo-badge span{font-size:20px}
-    .logo-title{font-size:20px}
-    .search{flex:1; display:flex; align-items:center; gap:8px; max-width:680px; margin:0 auto}
-    .search input{
-      width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border);
-      background:#0a1220; color:var(--text); outline:none
-    }
-    .top-actions{display:flex; align-items:center; gap:8px}
-    .btn{cursor:pointer; border:1px solid var(--border); background:#0a1423; color:var(--text); padding:8px 12px; border-radius:10px}
-    .btn:hover{border-color:#2b3b51}
-
-    /* Layout */
-    .layout{display:grid; grid-template-columns: 280px 1fr 300px; gap:16px; padding:16px; max-width:1250px; margin:0 auto}
-    @media (max-width:1100px){.layout{grid-template-columns: 240px 1fr;}}
-    @media (max-width:900px){.right{display:none}}
-    @media (max-width:720px){.layout{grid-template-columns:1fr; padding:8px}}
-
-    /* Panels */
-    .panel{background:linear-gradient(180deg, rgba(11,18,34,.9), rgba(11,18,34,.75)); border:1px solid var(--border); border-radius:16px; overflow:hidden}
-    .panel h3{margin:0; padding:14px 16px; border-bottom:1px solid var(--border); font-size:14px; color:#c7d2fe; letter-spacing:.2px}
-    .panel .content{padding:14px}
-
-    /* Left Nav */
-    .profile{
-      display:flex; align-items:center; gap:12px; padding:14px; border-bottom:1px solid var(--border)
-    }
-    .avatar{width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,#a7f3d0,#22c55e); display:grid; place-items:center; color:#064e3b; font-weight:900}
-    .nav{display:grid; gap:6px; padding:10px}
-    .nav a{display:flex; align-items:center; gap:10px; padding:10px 12px; text-decoration:none; color:var(--text); border-radius:10px}
-    .nav a:hover{background:#0f1a2b}
-
-    /* Composer */
-    .composer{display:grid; gap:10px}
-    .composer textarea{width:100%; min-height:84px; resize:vertical; padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:#0a1220; color:var(--text)}
-    .composer .actions{display:flex; gap:8px; align-items:center; justify-content:space-between}
-    .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
-    .chip{border:1px dashed #244055; padding:8px 10px; border-radius:999px; font-size:12px}
-    .btn-primary{background:linear-gradient(135deg,var(--brand),var(--accent)); color:#052e16; font-weight:800; border:none}
-
-    /* Feed */
-    .feed{display:grid; gap:12px}
-    .card{background:linear-gradient(180deg, rgba(10,18,34,.95), rgba(10,18,34,.8)); border:1px solid var(--border); border-radius:16px; overflow:hidden}
-    .card .head{display:flex; gap:10px; align-items:center; padding:12px 14px; border-bottom:1px solid var(--border)}
-    .card .author{font-weight:700}
-    .card .time{color:var(--muted); font-size:12px}
-    .card .body{padding:12px 14px; display:grid; gap:10px}
-    .photo{width:100%; height:340px; background:linear-gradient(135deg,#0b1525,#0c2336); border:1px solid #0e2740; border-radius:12px; display:grid; place-items:center; font-size:72px}
-    .tags{display:flex; gap:8px; flex-wrap:wrap}
-    .tag{background:#13233b; border:1px solid #1f3453; padding:6px 10px; border-radius:999px; font-size:12px; color:#bfe1ff}
-    .actions-row{display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-top:1px solid var(--border)}
-    .action{display:flex; align-items:center; gap:8px; cursor:pointer; padding:8px 10px; border-radius:10px}
-    .action:hover{background:#0f1a2b}
-    .counts{color:var(--muted); font-size:12px}
-
-    /* Comments */
-    .comments{padding:10px 14px; border-top:1px dashed var(--border); display:grid; gap:10px}
-    .comment{display:flex; gap:10px}
-    .comment .bubble{background:#0f1a2b; padding:10px 12px; border-radius:12px; border:1px solid #1e2e46}
-
-    /* Right */
-    .list{display:grid; gap:10px}
-    .tile{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px; border:1px solid var(--border); border-radius:12px}
-    .pill{padding:6px 10px; border-radius:999px; border:1px solid #2a3a52; font-size:12px}
-
-    /* Footer */
-    footer{padding:40px 16px; text-align:center; color:var(--muted)}
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAT Coach</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Top bar -->
   <header class="topbar">
-    <div class="logo">
-      <div class="logo-badge"><span>🐾</span></div>
-      <div class="logo-title">Dogbook</div>
-    </div>
-    <div class="search">
-      <input id="search" placeholder="Search pups, parks, and pals…" />
-      <button class="btn" id="newMsg">✉️</button>
-      <button class="btn" id="alerts">🔔</button>
-    </div>
-    <div class="top-actions">
-      <button class="btn" id="profileBtn">My Profile</button>
-    </div>
+    <div class="brand">SAT Coach</div>
   </header>
 
-  <!-- Layout -->
-  <main class="layout">
-    <!-- Left column -->
-    <aside class="left panel">
-      <div class="profile">
-        <div class="avatar">🐶</div>
-        <div>
-          <div style="font-weight:800">Chewy McFluff</div>
-          <div class="time">@chewy • Online</div>
-        </div>
-      </div>
-      <nav class="nav">
-        <a href="#" onclick="filterTag('all')">🏠 Feed</a>
-        <a href="#" onclick="filterTag('walks')">🚶 Walks</a>
-        <a href="#" onclick="filterTag('treats')">🍖 Treats</a>
-        <a href="#" onclick="filterTag('grooming')">✂️ Grooming</a>
-        <a href="#" onclick="filterTag('adoption')">💚 Adoption</a>
-        <a href="#" onclick="filterTag('training')">🎓 Training</a>
-        <a href="#" onclick="filterTag('events')">📅 Events</a>
-        <a href="#" onclick="filterTag('lost&found')">🧭 Lost & Found</a>
-      </nav>
-    </aside>
-
-    <!-- Middle column -->
-    <section class="middle">
-      <!-- Composer -->
-      <div class="panel" style="margin-bottom:12px">
-        <h3>Share something with your pack</h3>
-        <div class="content composer">
-          <textarea id="composerText" placeholder="What's wagging?"></textarea>
-          <div class="actions">
-            <div class="row">
-              <span class="chip">📸 Photo</span>
-              <span class="chip">📍 Check-in</span>
-              <span class="chip">🏷️ Tag a pal</span>
-            </div>
-            <button class="btn btn-primary" id="postBtn">Post</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Feed -->
-      <div id="feed" class="feed"></div>
+  <main>
+    <section class="menu">
+      <button id="math-btn">Math Practice</button>
+      <button id="reading-btn">Reading/Writing Practice</button>
+      <button id="flashcards-btn">Vocab Flashcards</button>
     </section>
 
-    <!-- Right column -->
-    <aside class="right panel">
-      <h3>Friend requests</h3>
-      <div class="content list" id="requests"></div>
-      <h3>Trending dog parks</h3>
-      <div class="content list" id="trending"></div>
-      <h3>Sponsored</h3>
-      <div class="content">
-        <div class="tile">
-          <div>
-            <div style="font-weight:700">Adopt a senior dog 🐕‍🦺</div>
-            <div class="time">Give an old soul a new home.</div>
-          </div>
-          <button class="btn">Learn more</button>
-        </div>
+    <section id="quiz-section" class="hidden">
+      <div id="question-container">
+        <h2 id="question-text"></h2>
+        <div id="choices"></div>
       </div>
-    </aside>
+      <button id="next-btn" class="hidden">Next Question</button>
+      <div id="explanation" class="hidden"></div>
+      <div id="score-container">Score: <span id="score">0</span></div>
+    </section>
+
+    <section id="flashcard-section" class="hidden">
+      <div id="flashcard">
+        <h2 id="word"></h2>
+        <p id="definition"></p>
+        <button id="next-flashcard">Next</button>
+        <button id="mark-known">Mark as Known</button>
+      </div>
+    </section>
   </main>
 
   <footer>
-    Dogbook — a playful UI mock, not affiliated with any other social network. Made with ❤️ for pups.
+    <p>Free SAT prep – no login required!</p>
   </footer>
 
-  <script>
-    // ------- Fake Data -------
-    const samplePosts = [
-      {
-        id: crypto.randomUUID(),
-        author: 'Rex the Explorer',
-        handle: '@rex',
-        time: '2h',
-        text: 'First time at the beach! Sand zoomies achieved. 🌊',
-        tags: ['walks','events'],
-        likes: 12,
-        liked:false,
-        comments:[{name:'Bella', text:'Paw-some! 🐾'},{name:'Milo', text:'Don’t eat the seaweed!'}]
-      },
-      {
-        id: crypto.randomUUID(),
-        author: 'Luna the Foodie',
-        handle: '@luna',
-        time: '5h',
-        text: 'Homemade peanut-butter biscuits. Drool level: MAX. 🍪',
-        tags: ['treats'],
-        likes: 31,
-        liked:false,
-        comments:[{name:'Ollie', text:'Recipe pls!'}]
-      },
-      {
-        id: crypto.randomUUID(),
-        author: 'Gizmo',
-        handle: '@gizmo',
-        time: '1d',
-        text: 'Anyone know a gentle groomer near Bark City? ✂️',
-        tags: ['grooming'],
-        likes: 4,
-        liked:false,
-        comments:[]
-      }
-    ];
-
-    const friendRequests = [
-      {name:'Coco', mutual:3},
-      {name:'Shadow', mutual:1},
-      {name:'Maple', mutual:5}
-    ];
-
-    const parks = [
-      {name:'Paws & Play Park', city:'San Paw-cisco', trend:'+128% this week'},
-      {name:'Zoomie Fields', city:'Barklyn', trend:'+64% this week'},
-      {name:'Wagwater Beach', city:'Puptown', trend:'+22% this week'}
-    ];
-
-    // ------- State -------
-    let state = {
-      posts: JSON.parse(localStorage.getItem('dogbook_posts')||'null') || samplePosts,
-      filter: 'all'
-    };
-
-    // ------- Helpers -------
-    const el = (sel, parent=document) => parent.querySelector(sel);
-    const make = (tag, props={}) => Object.assign(document.createElement(tag), props);
-    const save = () => localStorage.setItem('dogbook_posts', JSON.stringify(state.posts));
-
-    function render(){
-      renderFeed();
-      renderRequests();
-      renderTrending();
-    }
-
-    function tagPills(tags){
-      const wrap = make('div', {className:'tags'});
-      tags.forEach(t=> wrap.appendChild(make('span', {className:'tag', textContent:'#'+t})))
-      return wrap;
-    }
-
-    function postCard(p){
-      const card = make('article', {className:'card'});
-
-      // head
-      const head = make('div', {className:'head'});
-      const av = make('div', {className:'avatar', textContent:'🐕'});
-      const meta = make('div');
-      const name = make('div', {className:'author', textContent:p.author});
-      const time = make('div', {className:'time', textContent:`${p.handle} • ${p.time}`});
-      meta.appendChild(name); meta.appendChild(time);
-      head.appendChild(av); head.appendChild(meta);
-
-      // body
-      const body = make('div', {className:'body'});
-      body.appendChild(make('div', {textContent:p.text}));
-      body.appendChild(tagPills(p.tags||[]));
-      const img = make('div', {className:'photo', innerHTML:'🐾'});
-      body.appendChild(img);
-
-      // actions
-      const actions = make('div', {className:'actions-row'});
-      const left = make('div', {className:'row'});
-
-      const like = make('div', {className:'action', innerHTML:`<span>${p.liked?'💚':'🤍'}</span><span>Like</span>`});
-      like.onclick = ()=>{
-        p.liked = !p.liked; p.likes += p.liked?1:-1; save(); render();
-      };
-
-      const commentBtn = make('div', {className:'action', innerHTML:`<span>💬</span><span>Comment</span>`});
-      commentBtn.onclick = ()=>{
-        const who = prompt('Your name?','Guest');
-        if(!who) return;
-        const txt = prompt('Say something nice:');
-        if(!txt) return;
-        p.comments.push({name:who, text:txt}); save(); render();
-      };
-
-      left.appendChild(like); left.appendChild(commentBtn);
-      const counts = make('div', {className:'counts', textContent:`${p.likes} likes • ${p.comments.length} comments`});
-      actions.appendChild(left); actions.appendChild(counts);
-
-      // comments
-      const thread = make('div', {className:'comments'});
-      p.comments.forEach(c=>{
-        const row = make('div', {className:'comment'});
-        row.appendChild(make('div', {className:'avatar', textContent:'🐾'}));
-        const bub = make('div', {className:'bubble'});
-        bub.appendChild(make('div', {style:'font-weight:700', textContent:c.name}));
-        bub.appendChild(make('div', {textContent:c.text}));
-        row.appendChild(bub);
-        thread.appendChild(row);
-      });
-
-      card.appendChild(head);
-      card.appendChild(body);
-      card.appendChild(actions);
-      card.appendChild(thread);
-      return card;
-    }
-
-    function renderFeed(){
-      const root = el('#feed');
-      root.innerHTML = '';
-      const filtered = state.filter==='all' ? state.posts : state.posts.filter(p=> (p.tags||[]).includes(state.filter));
-      if(!filtered.length){
-        const empty = make('div', {className:'panel content', innerHTML:`No posts in <b>#${state.filter}</b> yet. Be the first to share!`});
-        root.appendChild(empty);
-        return;
-      }
-      filtered.forEach(p=> root.appendChild(postCard(p)));
-    }
-
-    function renderRequests(){
-      const root = el('#requests');
-      root.innerHTML='';
-      friendRequests.forEach(f=>{
-        const t = make('div', {className:'tile'});
-        const l = make('div');
-        l.appendChild(make('div', {style:'font-weight:700', textContent:f.name}));
-        l.appendChild(make('div', {className:'time', textContent:`${f.mutual} mutual friends`}));
-        const r = make('div', {className:'row'});
-        const acc = make('button', {className:'btn', textContent:'Accept'});
-        const dec = make('button', {className:'btn', textContent:'Decline'});
-        r.appendChild(acc); r.appendChild(dec);
-        t.appendChild(l); t.appendChild(r);
-        root.appendChild(t);
-      });
-    }
-
-    function renderTrending(){
-      const root = el('#trending');
-      root.innerHTML='';
-      parks.forEach(p=>{
-        const t = make('div', {className:'tile'});
-        t.appendChild(make('div', {innerHTML:`<div style='font-weight:700'>${p.name}</div><div class='time'>${p.city}</div>`}));
-        t.appendChild(make('div', {className:'pill', textContent:p.trend}));
-        root.appendChild(t);
-      })
-    }
-
-    // ------- Composer -------
-    el('#postBtn').addEventListener('click', ()=>{
-      const text = el('#composerText').value.trim();
-      if(!text) return alert('Write something first 🙂');
-      const tags = Array.from(text.matchAll(/#([a-zA-Z0-9_]+)/g)).map(m=>m[1]);
-      state.posts.unshift({
-        id: crypto.randomUUID(),
-        author: 'Chewy McFluff', handle:'@chewy', time:'just now', text,
-        tags: tags.length?tags:['events'], likes:0, liked:false, comments:[]
-      });
-      el('#composerText').value='';
-      save(); render();
-    });
-
-    // ------- Filters & Search -------
-    function filterTag(tag){ state.filter = tag; render(); }
-    window.filterTag = filterTag;
-
-    el('#search').addEventListener('input', (e)=>{
-      const q = e.target.value.toLowerCase();
-      const cards = Array.from(document.querySelectorAll('#feed .card'));
-      cards.forEach(c=>{
-        const text = c.querySelector('.body').innerText.toLowerCase();
-        c.style.display = text.includes(q) ? '' : 'none';
-      })
-    });
-
-    // ------- Init -------
-    render();
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
