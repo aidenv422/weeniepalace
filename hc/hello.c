@@ -1,0 +1,1 @@
+f = get_float("Input a floating-point number: ")
