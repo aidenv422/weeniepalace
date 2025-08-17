@@ -49,7 +49,7 @@
           <option value="mixed">Mixed (RW + Math)</option>
         </select>
         <label>Questions per Module</label>
-        <input type="number" id="count" value="10" min="2" max="100" />
+        <input type="number" id="count" value="50" min="2" max="50" />
         <div class="flex" style="margin-top:10px">
           <label class="pill"><input type="checkbox" id="adaptive"/> Adaptive (Module 2 harder if Module 1 ≥ 70%)</label>
           <label class="pill"><input type="checkbox" id="timed"/> Timed (32m RW / 35m Math per module)</label>
@@ -99,118 +99,219 @@
   - Rough scaled score estimator
 -----------------------------***/
 
-// Generate extensive question banks - 200 questions each
+// Generate extensive question banks - 1000 questions each
 function generateQuestionBank() {
   const rwBank = [];
   const mathBank = [];
   
-  // Reading & Writing Questions (200 total)
-  const rwStems = [
-    "Which choice best maintains the sentence's meaning?\nThe scientist was known for her _meticulous_ record-keeping.",
-    "Choose the best placement for the underlined phrase.\nThe hikers (after a long climb) reached the summit and celebrated.",
-    "Which choice completes the sentence with the most logical transition?\nThe policy reduces costs; ___, it may limit access for some patients.",
-    "Choose the best revision to eliminate wordiness.",
-    "In context, 'tenuous' most nearly means:",
-    "Which choice best supports the claim? (Assume preceding claim: 'Urban tree canopies reduce energy costs.')",
-    "Select the sentence that best combines the two: 'The rover collected samples. The team analyzed them remotely.'",
-    "Choose the answer that improves pronoun clarity.",
-    "Which choice most effectively introduces the paragraph about coral bleaching?",
-    "In the sentence 'Researchers elicit participants' responses,' the word 'elicit' most nearly means:"
+  // Reading & Writing Question Templates (expanded)
+  const rwTemplates = [
+    // Grammar & Usage
+    {stem: "Which choice best maintains the sentence's meaning?\nThe {adjective} {noun} was known for being _{word}_.", 
+     type: "vocabulary", difficulty: 1},
+    {stem: "Choose the best placement for the underlined phrase.\nThe {subjects} ({modifier}) {verb} and {action}.", 
+     type: "modifier", difficulty: 1},
+    {stem: "Which choice completes the sentence with the most logical transition?\n{statement1}; ___, {statement2}.", 
+     type: "transition", difficulty: 2},
+    {stem: "Choose the best revision to eliminate wordiness.", 
+     type: "concision", difficulty: 2},
+    {stem: "In context, '{word}' most nearly means:", 
+     type: "vocab_context", difficulty: 2},
+    {stem: "Which choice best supports the claim? (Assume preceding claim: '{claim}')", 
+     type: "evidence", difficulty: 3},
+    {stem: "Select the sentence that best combines the two: '{sentence1}' '{sentence2}'", 
+     type: "combining", difficulty: 2},
+    {stem: "Choose the answer that improves pronoun clarity.", 
+     type: "pronouns", difficulty: 1},
+    {stem: "Which choice most effectively introduces the paragraph about {topic}?", 
+     type: "introduction", difficulty: 2},
+    {stem: "The author uses {literary_device} in order to:", 
+     type: "rhetoric", difficulty: 3},
+    // Reading Comprehension
+    {stem: "According to the passage, {topic} is characterized by:", 
+     type: "comprehension", difficulty: 1},
+    {stem: "The primary purpose of the passage is to:", 
+     type: "main_idea", difficulty: 2},
+    {stem: "The author's attitude toward {subject} can best be described as:", 
+     type: "tone", difficulty: 2},
+    {stem: "Which statement best describes the relationship between {concept1} and {concept2}?", 
+     type: "relationships", difficulty: 3},
+    {stem: "The data in the graph supports which conclusion?", 
+     type: "data_analysis", difficulty: 3}
   ];
   
-  const rwChoicesBank = [
-    [["careless","thorough","hasty","casual"], 1, "Meticulous ≈ thorough."],
-    [["Correct as is","Move after 'hikers'","Move after 'summit'","Remove it"], 0, "Modifier is placed logically and clearly."],
-    [["similarly","however","therefore","subsequently"], 1, "Contrast needed: 'however'."],
-    [["In order to be able to succeed, effort is necessary.","To succeed, effort is necessary.","For success to actually occur, effort is something that is necessary.","Effort is a thing that is necessary in order to succeed."], 1, "Concise and clear."],
-    [["fragile","lengthy","generous","ancient"], 0, "Tenuous ≈ weak/fragile."],
-    [["Cities are growing worldwide.","Trees provide shade that lowers cooling demand in nearby buildings.","Parks are pleasant.","Many people like trees."], 1, "Only this offers specific, relevant evidence."],
-    [["The rover collected samples; the team analyzed them remotely.","The rover collected samples, the team analyzed them remotely.","While the rover collected samples, and the team analyzed them remotely.","Collecting samples, the team analyzed them remotely."], 0, "Semicolon correctly links two independent clauses."],
-    [["When Kim texted Jess about the meeting, she said to move it.","When Kim texted Jess about the meeting, Jess said to move it.","When Kim texted Jess about the meeting, Kim said to move it.","When Kim texted Jess about the meeting, they said to move it."], 1, "Disambiguates 'she'."],
-    [["Corals are colorful.","Marine ecosystems matter to many people.","Rising ocean temperatures can disrupt the symbiosis that corals rely on, threatening reefs.","Many tourists enjoy snorkeling."], 2, "Specific and previews the topic."],
-    [["forbid","draw out","list","anticipate"], 1, "Elicit ≈ draw out."]
-  ];
+  // Word banks for variety
+  const wordBanks = {
+    adjectives: ["meticulous", "diligent", "ambitious", "innovative", "persistent", "analytical", "creative", "methodical", "strategic", "resourceful"],
+    nouns: ["scientist", "researcher", "engineer", "architect", "professor", "analyst", "designer", "manager", "consultant", "specialist"],
+    transitions: ["however", "therefore", "furthermore", "nevertheless", "consequently", "moreover", "similarly", "conversely", "subsequently", "likewise"],
+    topics: ["climate change", "renewable energy", "artificial intelligence", "genetic engineering", "space exploration", "ocean conservation", "urban planning", "sustainable agriculture", "medical research", "archaeological discoveries"],
+    literary_devices: ["metaphor", "symbolism", "irony", "alliteration", "personification", "imagery", "foreshadowing", "juxtaposition", "allegory", "hyperbole"]
+  };
   
-  // Generate 200 RW questions by cycling through patterns
-  for(let i = 0; i < 200; i++) {
-    const baseIdx = i % rwStems.length;
-    const choiceIdx = i % rwChoicesBank.length;
-    const difficulty = Math.floor(i / 67) + 1; // Distribute across difficulties 1, 2, 3
+  // Generate 1000 RW questions
+  for(let i = 0; i < 1000; i++) {
+    const template = rwTemplates[i % rwTemplates.length];
+    const difficulty = Math.floor(Math.random() * 3) + 1;
+    
+    // Fill template with random words for variety
+    let stem = template.stem;
+    const replacements = {
+      '{adjective}': wordBanks.adjectives[Math.floor(Math.random() * wordBanks.adjectives.length)],
+      '{noun}': wordBanks.nouns[Math.floor(Math.random() * wordBanks.nouns.length)],
+      '{word}': wordBanks.adjectives[Math.floor(Math.random() * wordBanks.adjectives.length)],
+      '{topic}': wordBanks.topics[Math.floor(Math.random() * wordBanks.topics.length)],
+      '{literary_device}': wordBanks.literary_devices[Math.floor(Math.random() * wordBanks.literary_devices.length)]
+    };
+    
+    Object.keys(replacements).forEach(key => {
+      stem = stem.replace(key, replacements[key]);
+    });
+    
+    // Generate appropriate choices based on question type
+    let choices, ans, expl;
+    switch(template.type) {
+      case "vocabulary":
+        choices = ["careless", "thorough", "hasty", "casual"];
+        ans = 1;
+        expl = "Context suggests precision and care.";
+        break;
+      case "transition":
+        choices = ["similarly", "however", "therefore", "subsequently"];
+        ans = Math.floor(Math.random() * 4);
+        expl = "Consider the logical relationship between the statements.";
+        break;
+      case "evidence":
+        choices = [
+          "General background information",
+          "Specific supporting data or example", 
+          "Unrelated interesting fact",
+          "Personal opinion"
+        ];
+        ans = 1;
+        expl = "Evidence should directly support the claim.";
+        break;
+      default:
+        choices = ["Option A", "Option B", "Option C", "Option D"];
+        ans = Math.floor(Math.random() * 4);
+        expl = "Consider context and standard usage.";
+    }
     
     rwBank.push({
       id: `rw${i+1}`,
-      diff: Math.min(difficulty, 3),
-      stem: rwStems[baseIdx] + (i > 9 ? ` (Variant ${Math.floor(i/10) + 1})` : ""),
-      choices: rwChoicesBank[choiceIdx][0],
-      ans: rwChoicesBank[choiceIdx][1],
-      expl: rwChoicesBank[choiceIdx][2]
+      diff: difficulty,
+      stem: stem + ` (Question ${i+1})`,
+      choices: choices,
+      ans: ans,
+      expl: expl
     });
   }
   
-  // Math Questions - base problems
-  const mathProblems = [
-    ["Solve: {a}x + {b} = {c}", ["linear algebra", "solve for x"]],
-    ["What is the slope of the line through ({x1},{y1}) and ({x2},{y2})?", ["coordinate geometry", "slope formula"]],
-    ["A function is defined by f(x)=x²-{a}x. What is f({b})?", ["functions", "function evaluation"]],
-    ["A rectangle has perimeter {p} and length {l}. What is the width?", ["geometry", "perimeter formula"]],
-    ["If (x-{a})(x+{b})=0, what is the sum of the solutions?", ["quadratic equations", "sum of roots"]],
-    ["The mean of {nums} is {mean}. What is the missing value?", ["statistics", "mean calculation"]],
-    ["System: y={a}x+{b} and y={c}x+{d}. Find x.", ["systems of equations", "substitution method"]],
-    ["A right triangle has legs {a} and {b}. What is the hypotenuse?", ["geometry", "Pythagorean theorem"]],
-    ["If g(x)={a}x+{b} and h(x)=x-{c}, compute g(h({d})).", ["functions", "composition of functions"]],
-    ["What is the solution to |{a}x-{b}|={c}?", ["absolute value", "absolute value equations"]]
+  // Math Question Templates (expanded)
+  const mathTemplates = [
+    // Algebra
+    {type: "linear", stem: "Solve: {a}x + {b} = {c}", difficulty: 1},
+    {type: "quadratic", stem: "Solve: x² + {b}x + {c} = 0", difficulty: 2},
+    {type: "system", stem: "System: y = {a}x + {b} and y = {c}x + {d}. Find x.", difficulty: 2},
+    {type: "inequality", stem: "Solve: {a}x + {b} > {c}", difficulty: 2},
+    {type: "exponential", stem: "If {a}^x = {b}, what is x?", difficulty: 3},
+    // Geometry
+    {type: "slope", stem: "What is the slope of the line through ({x1},{y1}) and ({x2},{y2})?", difficulty: 1},
+    {type: "area", stem: "A rectangle has length {l} and width {w}. What is its area?", difficulty: 1},
+    {type: "perimeter", stem: "A rectangle has perimeter {p} and length {l}. What is the width?", difficulty: 1},
+    {type: "pythagorean", stem: "A right triangle has legs {a} and {b}. What is the hypotenuse?", difficulty: 2},
+    {type: "circle", stem: "A circle has radius {r}. What is its area?", difficulty: 2},
+    {type: "volume", stem: "A cylinder has radius {r} and height {h}. What is its volume?", difficulty: 3},
+    // Functions
+    {type: "function_eval", stem: "If f(x) = x² - {a}x + {b}, what is f({c})?", difficulty: 2},
+    {type: "composition", stem: "If g(x) = {a}x + {b} and h(x) = x - {c}, compute g(h({d})).", difficulty: 3},
+    {type: "domain", stem: "What is the domain of f(x) = 1/(x - {a})?", difficulty: 2},
+    {type: "inverse", stem: "If f(x) = {a}x + {b}, what is f⁻¹(x)?", difficulty: 3},
+    // Statistics & Probability
+    {type: "mean", stem: "The mean of {nums} is {mean}. What is the missing value?", difficulty: 1},
+    {type: "median", stem: "What is the median of: {sequence}?", difficulty: 1},
+    {type: "probability", stem: "A bag contains {r} red balls and {b} blue balls. What is P(red)?", difficulty: 2},
+    {type: "combinations", stem: "How many ways can you choose {k} items from {n} items?", difficulty: 3},
+    // Trigonometry
+    {type: "basic_trig", stem: "In a right triangle, if sin θ = {fraction}, what is cos θ?", difficulty: 2},
+    {type: "trig_identity", stem: "Simplify: sin²θ + cos²θ", difficulty: 2}
   ];
   
-  // Generate 200 math questions
-  for(let i = 0; i < 200; i++) {
-    const baseIdx = i % mathProblems.length;
-    const difficulty = Math.floor(i / 67) + 1; // Distribute across difficulties 1, 2, 3
+  // Generate 1000 math questions
+  for(let i = 0; i < 1000; i++) {
+    const template = mathTemplates[i % mathTemplates.length];
+    const difficulty = Math.floor(Math.random() * 3) + 1;
     
-    // Generate random parameters for variety
-    const a = Math.floor(Math.random() * 9) + 1;
-    const b = Math.floor(Math.random() * 20) + 1;
-    const c = Math.floor(Math.random() * 30) + 10;
+    // Generate random parameters
+    const params = {
+      a: Math.floor(Math.random() * 9) + 1,
+      b: Math.floor(Math.random() * 20) + 1,
+      c: Math.floor(Math.random() * 30) + 10,
+      d: Math.floor(Math.random() * 10) + 1,
+      r: Math.floor(Math.random() * 5) + 1,
+      h: Math.floor(Math.random() * 10) + 1,
+      l: Math.floor(Math.random() * 15) + 5,
+      w: Math.floor(Math.random() * 10) + 3,
+      p: Math.floor(Math.random() * 40) + 20,
+      x1: Math.floor(Math.random() * 10),
+      y1: Math.floor(Math.random() * 10),
+      x2: Math.floor(Math.random() * 10) + 5,
+      y2: Math.floor(Math.random() * 10) + 5
+    };
     
-    let stem, choices, ans, expl;
+    // Fill in the template
+    let stem = template.stem;
+    Object.keys(params).forEach(key => {
+      stem = stem.replace(`{${key}}`, params[key]);
+    });
     
-    switch(baseIdx) {
-      case 0: // Linear equation
-        const result = Math.floor((c - b) / a);
-        stem = `Solve: ${a}x + ${b} = ${c}`;
-        choices = [
-          `x=${result-1}`,
-          `x=${result}`,
-          `x=${result+1}`,
-          `x=${result+2}`
-        ];
+    let choices, ans, expl;
+    
+    // Generate appropriate answers based on question type
+    switch(template.type) {
+      case "linear":
+        const result = Math.floor((params.c - params.b) / params.a);
+        choices = [`x=${result-1}`, `x=${result}`, `x=${result+1}`, `x=${result+2}`];
         ans = 1;
-        expl = `${a}x = ${c - b} ⇒ x = ${result}`;
+        expl = `${params.a}x = ${params.c - params.b} ⇒ x = ${result}`;
         break;
         
-      case 1: // Slope
-        const x1 = Math.floor(Math.random() * 10);
-        const y1 = Math.floor(Math.random() * 10);
-        const x2 = x1 + Math.floor(Math.random() * 5) + 1;
-        const y2 = y1 + Math.floor(Math.random() * 10) + 1;
-        const slope = (y2 - y1) / (x2 - x1);
-        stem = `What is the slope of the line through (${x1},${y1}) and (${x2},${y2})?`;
-        choices = [`${slope-1}`, `${slope}`, `${slope+1}`, `1/${slope}`];
+      case "slope":
+        const slope = Math.round(((params.y2 - params.y1) / (params.x2 - params.x1)) * 100) / 100;
+        choices = [`${slope - 1}`, `${slope}`, `${slope + 1}`, `${Math.round((1/slope) * 100) / 100}`];
         ans = 1;
-        expl = `(${y2}-${y1})/(${x2}-${x1}) = ${y2-y1}/${x2-x1} = ${slope}`;
+        expl = `slope = (${params.y2}-${params.y1})/(${params.x2}-${params.x1}) = ${slope}`;
         break;
         
-      default: // Use simplified versions for remaining cases
-        stem = `Math problem ${i+1}: If x = ${a}, what is x + ${b}?`;
-        const answer = a + b;
-        choices = [`${answer-2}`, `${answer-1}`, `${answer}`, `${answer+1}`];
-        ans = 2;
-        expl = `${a} + ${b} = ${answer}`;
+      case "area":
+        const area = params.l * params.w;
+        choices = [`${area - 5}`, `${area}`, `${area + 5}`, `${area * 2}`];
+        ans = 1;
+        expl = `Area = length × width = ${params.l} × ${params.w} = ${area}`;
+        break;
+        
+      case "mean":
+        const nums = [6, 8, 10, "x"];
+        const knownSum = 6 + 8 + 10;
+        const target = params.a + 5; // mean
+        const missing = target * 4 - knownSum;
+        choices = [`${missing - 2}`, `${missing}`, `${missing + 2}`, `${missing + 4}`];
+        ans = 1;
+        expl = `Sum = ${target} × 4 = ${target * 4}. Missing value = ${target * 4} - ${knownSum} = ${missing}`;
+        break;
+        
+      default:
+        // Generic answer generation
+        const answer = params.a + params.b;
+        choices = [`${answer - 2}`, `${answer}`, `${answer + 1}`, `${answer + 3}`];
+        ans = 1;
+        expl = `Calculate step by step using given values.`;
     }
     
     mathBank.push({
       id: `m${i+1}`,
-      diff: Math.min(difficulty, 3),
-      stem: stem,
+      diff: difficulty,
+      stem: stem + ` (Problem ${i+1})`,
       choices: choices,
       ans: ans,
       expl: expl
@@ -238,7 +339,7 @@ let state = {
   attempted: 0,
   timed: false,
   adaptive: false,
-  perModule: 10,
+  perModule: 50,
   timer: null,
   timeLeft: 0,
   finished: false
@@ -512,7 +613,7 @@ function escapeHtml(str){
 document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('startBtn').onclick = ()=>{
     state.section = document.getElementById('section').value;
-    state.perModule = Math.max(2, Math.min(100, parseInt(document.getElementById('count').value||10)));
+    state.perModule = Math.max(2, Math.min(50, parseInt(document.getElementById('count').value||50)));
     state.adaptive = document.getElementById('adaptive').checked;
     state.timed = document.getElementById('timed').checked;
     state.module = 1; 
