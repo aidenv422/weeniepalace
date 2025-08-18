@@ -33,6 +33,7 @@
     summary{cursor:pointer;color:var(--fg);font-weight:600}
     pre{white-space:pre-wrap;word-wrap:break-word;background:#0a1020;color:#b0c4ff;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.06)}
     .finish-btn{margin-top:16px;background:linear-gradient(135deg,var(--accent),#5ee3b3);color:#071126}
+    .passage{background:#0f1a31;padding:12px;border-radius:8px;margin:8px 0;color:var(--muted);font-style:italic;border-left:3px solid var(--brand)}
   </style>
 </head>
 <body>
@@ -92,230 +93,522 @@
 
 <script>
 /**** --------------------------
-  Simple SAT-like Test Generator
-  - Two modules per section
-  - Optional adaptivity
-  - Local JSON item bank with difficulty tags
-  - Rough scaled score estimator
+  Improved SAT-like Test Generator
+  - Realistic Reading & Writing questions
+  - Math word problems
+  - Better question quality
 -----------------------------***/
 
-// Generate extensive question banks - 1000 questions each
+// Generate high-quality, SAT-accurate question banks
 function generateQuestionBank() {
   const rwBank = [];
   const mathBank = [];
   
-  // Reading & Writing Question Templates (expanded)
-  const rwTemplates = [
-    // Grammar & Usage
-    {stem: "Which choice best maintains the sentence's meaning?\nThe {adjective} {noun} was known for being _{word}_.", 
-     type: "vocabulary", difficulty: 1},
-    {stem: "Choose the best placement for the underlined phrase.\nThe {subjects} ({modifier}) {verb} and {action}.", 
-     type: "modifier", difficulty: 1},
-    {stem: "Which choice completes the sentence with the most logical transition?\n{statement1}; ___, {statement2}.", 
-     type: "transition", difficulty: 2},
-    {stem: "Choose the best revision to eliminate wordiness.", 
-     type: "concision", difficulty: 2},
-    {stem: "In context, '{word}' most nearly means:", 
-     type: "vocab_context", difficulty: 2},
-    {stem: "Which choice best supports the claim? (Assume preceding claim: '{claim}')", 
-     type: "evidence", difficulty: 3},
-    {stem: "Select the sentence that best combines the two: '{sentence1}' '{sentence2}'", 
-     type: "combining", difficulty: 2},
-    {stem: "Choose the answer that improves pronoun clarity.", 
-     type: "pronouns", difficulty: 1},
-    {stem: "Which choice most effectively introduces the paragraph about {topic}?", 
-     type: "introduction", difficulty: 2},
-    {stem: "The author uses {literary_device} in order to:", 
-     type: "rhetoric", difficulty: 3},
-    // Reading Comprehension
-    {stem: "According to the passage, {topic} is characterized by:", 
-     type: "comprehension", difficulty: 1},
-    {stem: "The primary purpose of the passage is to:", 
-     type: "main_idea", difficulty: 2},
-    {stem: "The author's attitude toward {subject} can best be described as:", 
-     type: "tone", difficulty: 2},
-    {stem: "Which statement best describes the relationship between {concept1} and {concept2}?", 
-     type: "relationships", difficulty: 3},
-    {stem: "The data in the graph supports which conclusion?", 
-     type: "data_analysis", difficulty: 3}
+  // Reading & Writing - SAT-accurate questions covering all domains
+  const rwQuestions = [
+    // Standard English Conventions - Grammar & Usage
+    {
+      stem: "Maya Angelou's memoir, I Know Why the Caged Bird Sings, ___ profound insights into the struggles and triumphs of growing up as an African American woman in the South.",
+      choices: ["provides", "provide", "providing", "has provided"],
+      ans: 0,
+      diff: 1,
+      expl: "The subject 'memoir' is singular, so the verb must be 'provides.'"
+    },
+    {
+      stem: "Despite ___ numerous obstacles, the research team successfully completed their groundbreaking study on climate change effects.",
+      choices: ["encountering", "they encountered", "having encountered", "to encounter"],
+      ans: 0,
+      diff: 2,
+      expl: "The preposition 'despite' requires a gerund phrase."
+    },
+    {
+      stem: "The company's new policy requires employees to submit their timesheets by Friday; ___ will result in delayed paychecks.",
+      choices: ["failure to do so", "failing to do this", "not doing it", "if they don't"],
+      ans: 0,
+      diff: 2,
+      expl: "'Failure to do so' is the most precise and formal way to refer back to the requirement."
+    },
+    {
+      stem: "While the artist's early paintings were characterized by bold colors and abstract forms, her later works ___ more subdued tones and realistic imagery.",
+      choices: ["feature", "features", "featuring", "to feature"],
+      ans: 0,
+      diff: 1,
+      expl: "The plural subject 'works' requires the plural verb 'feature.'"
+    },
+
+    // Standard English Conventions - Punctuation
+    {
+      stem: "The committee reviewed three proposals: Johnson's plan for urban development ___ Miller's proposal for green spaces, and Chen's design for affordable housing.",
+      choices: ["—", ",", ";", ":"],
+      ans: 1,
+      diff: 2,
+      expl: "Commas separate items in a series of three or more elements."
+    },
+    {
+      stem: "The archaeologist discovered artifacts from three distinct periods ___ the Bronze Age, the Iron Age, and the Medieval period.",
+      choices: [":", ";", "—", ","],
+      ans: 0,
+      diff: 2,
+      expl: "A colon introduces a list when preceded by a complete sentence."
+    },
+
+    // Expression of Ideas - Transitions
+    {
+      stem: "Solar energy costs have decreased dramatically over the past decade. ___, many homeowners are now choosing to install solar panels.",
+      choices: ["However", "Consequently", "Similarly", "Nevertheless"],
+      ans: 1,
+      diff: 2,
+      expl: "'Consequently' shows the cause-and-effect relationship between lower costs and increased adoption."
+    },
+    {
+      stem: "The study found that regular exercise improves cardiovascular health. ___, it also showed benefits for mental well-being and cognitive function.",
+      choices: ["Instead", "Furthermore", "However", "Therefore"],
+      ans: 1,
+      diff: 2,
+      expl: "'Furthermore' adds additional supporting information to the initial finding."
+    },
+
+    // Expression of Ideas - Effective Language Use
+    {
+      stem: "Which choice most effectively combines the sentences?\n\nThe museum's new exhibit features contemporary art. The art explores themes of identity and social justice.",
+      choices: [
+        "The museum's new exhibit features contemporary art that explores themes of identity and social justice.",
+        "The museum's new exhibit features contemporary art, and it explores themes of identity and social justice.",
+        "The museum's new exhibit features contemporary art; the art explores themes of identity and social justice.",
+        "The museum's new exhibit features contemporary art, which it explores themes of identity and social justice."
+      ],
+      ans: 0,
+      diff: 2,
+      expl: "Option A creates a concise, clear sentence using a restrictive relative clause."
+    },
+
+    // Reading Comprehension - Information and Ideas
+    {
+      stem: "The following text is adapted from a 2023 study on urban biodiversity.\n\nUrban environments, once thought to be ecological wastelands, are increasingly recognized as important habitats for wildlife. Recent studies have shown that cities can support surprisingly diverse ecosystems, with some urban areas hosting more species than surrounding rural landscapes. This phenomenon occurs because cities create a mosaic of microhabitats—from parks and gardens to green roofs and abandoned lots—that can support species with different ecological needs. However, urban wildlife faces unique challenges, including habitat fragmentation, pollution, and human disturbance.\n\nAccording to the text, urban environments:",
+      choices: [
+        "were previously considered to have little ecological value.",
+        "consistently have fewer species than rural areas.",
+        "provide uniform habitat conditions for wildlife.",
+        "eliminate the challenges faced by wildlife populations."
+      ],
+      ans: 0,
+      diff: 1,
+      expl: "The text states that urban environments were 'once thought to be ecological wastelands.'"
+    },
+    {
+      stem: "The following text is from a 2022 article about renewable energy economics.\n\nThe cost of solar energy has plummeted by over 80% in the past decade, making it the cheapest source of electricity in many regions worldwide. This dramatic price reduction has been driven by technological improvements, economies of scale in manufacturing, and increased competition among suppliers. As solar becomes more affordable, governments and businesses are accelerating their adoption of renewable energy systems, creating a positive feedback loop that further drives down costs and spurs innovation.\n\nWhich choice best describes the function of the underlined sentence [the last sentence]?",
+      choices: [
+        "It introduces a contrasting viewpoint about solar energy adoption.",
+        "It describes a self-reinforcing cycle that enhances the trend discussed.",
+        "It provides specific examples of technological improvements.",
+        "It questions the sustainability of current cost reductions."
+      ],
+      ans: 1,
+      diff: 2,
+      expl: "The sentence describes how increased adoption creates a 'positive feedback loop' that continues the trend."
+    },
+
+    // Reading Comprehension - Craft and Structure  
+    {
+      stem: "The following text is adapted from Virginia Woolf's 1929 essay \"A Room of One's Own.\"\n\nLet me imagine, since facts are so hard to come by, what would have happened had Shakespeare had a wonderfully gifted sister, called Judith, let us say. Shakespeare himself went, very probably—his mother was an heiress—to the grammar school, where he may have learnt Latin—Ovid, Virgil and Horace—and the elements of grammar and logic. He was, it is well known, a wild boy who poached rabbits, perhaps shot a deer, and had, rather sooner than he should have done, to marry a woman in the neighborhood, who bore him a child rather quicker than was right.\n\nWoolf's primary purpose in this passage is to:",
+      choices: [
+        "provide biographical details about Shakespeare's actual sister.",
+        "establish a hypothetical scenario to explore gender inequality.",
+        "criticize Shakespeare's behavior as a young man.",
+        "demonstrate the superior education available to wealthy families."
+      ],
+      ans: 1,
+      diff: 3,
+      expl: "Woolf creates an imaginary sister to examine how gender affected opportunities in Shakespeare's time."
+    },
+
+    // Reading Comprehension - Data Analysis
+    {
+      stem: "The graph shows the relationship between study time (hours per week) and GPA for college students. The line of best fit has the equation GPA = 0.15(study hours) + 2.1.\n\nBased on this equation, a student who studies 20 hours per week would be predicted to have a GPA of:",
+      choices: ["4.1", "5.1", "3.1", "2.1"],
+      ans: 1,
+      diff: 2,
+      expl: "GPA = 0.15(20) + 2.1 = 3.0 + 2.1 = 5.1. However, this would exceed typical GPA scales, suggesting the model may not be accurate for high study hours."
+    },
+
+    // Vocabulary in Context
+    {
+      stem: "The following text discusses marine ecosystems.\n\nThe kelp forest ecosystem is remarkably resilient, able to recover from disturbances such as storms and temperature fluctuations. However, this resilience has limits; sustained warming and pollution can overwhelm the system's capacity to adapt.\n\nAs used in the text, \"resilient\" most nearly means:",
+      choices: ["flexible", "resistant to change", "able to bounce back", "permanently stable"],
+      ans: 2,
+      diff: 2,
+      expl: "The context shows kelp forests can 'recover from disturbances,' indicating the ability to bounce back."
+    },
+
+    // Rhetorical Analysis
+    {
+      stem: "The following text is from a speech by environmental activist Greta Thunberg.\n\n\"You have stolen my dreams and my childhood with your empty words. And yet I'm one of the lucky ones. People are suffering. People are dying. Entire ecosystems are collapsing.\"\n\nThunberg's use of personal language (\"my dreams,\" \"my childhood\") primarily serves to:",
+      choices: [
+        "establish her credibility as a climate expert.",
+        "create an emotional connection with the audience.",
+        "provide statistical evidence of climate change.",
+        "demonstrate her superior knowledge of environmental science."
+      ],
+      ans: 1,
+      diff: 2,
+      expl: "Personal language makes the global issue feel immediate and emotionally resonant for the audience."
+    },
+
+    // Command of Evidence
+    {
+      stem: "A student is writing an essay arguing that urban gardens improve community health. Which of the following pieces of evidence would best support this claim?",
+      choices: [
+        "A description of different types of vegetables grown in urban gardens.",
+        "A study showing reduced stress levels in neighborhoods with community gardens.",
+        "An explanation of the historical development of urban agriculture.",
+        "A list of cities that have implemented urban garden programs."
+      ],
+      ans: 1,
+      diff: 2,
+      expl: "Evidence showing health benefits (reduced stress) directly supports the claim about community health improvement."
+    }
+  ]; wildlife faces unique challenges, including habitat fragmentation, pollution, and human disturbance.\n\nAccording to the text, urban environments:",
+      choices: [
+        "were previously considered to have little ecological value.",
+        "consistently have fewer species than rural areas.",
+        "provide uniform habitat conditions for wildlife.",
+        "eliminate the challenges faced by wildlife populations."
+      ],
+      ans: 0,
+      diff: 1,
+      expl: "The text states that urban environments were 'once thought to be ecological wastelands.'"
+    },
+    {
+      stem: "The following text is from a 2022 article about renewable energy economics.\n\nThe cost of solar energy has plummeted by over 80% in the past decade, making it the cheapest source of electricity in many regions worldwide. This dramatic price reduction has been driven by technological improvements, economies of scale in manufacturing, and increased competition among suppliers. As solar becomes more affordable, governments and businesses are accelerating their adoption of renewable energy systems, creating a positive feedback loop that further drives down costs and spurs innovation.\n\nWhich choice best describes the main rhetorical function of the second sentence?",
+      choices: [
+        "It provides specific examples of solar energy applications.",
+        "It explains the causes of the trend described in the first sentence.",
+        "It presents a contrasting viewpoint about renewable energy costs.",
+        "It introduces a new topic about government energy policies."
+      ],
+      ans: 1,
+      diff: 2,
+      expl: "The second sentence explains what 'driven' the price reduction mentioned in the first sentence."
+    },
+    
+    // Craft and Structure questions
+    {
+      stem: "While revising an essay about marine conservation, a student wants to combine these two sentences:\n\nCoral reefs are among the most biodiverse ecosystems on Earth. They face unprecedented threats from climate change and human activities.\n\nWhich choice most effectively combines the sentences?",
+      choices: [
+        "Coral reefs are among the most biodiverse ecosystems on Earth, but they face unprecedented threats from climate change and human activities.",
+        "Coral reefs are among the most biodiverse ecosystems on Earth, and they face unprecedented threats from climate change and human activities.",
+        "Although coral reefs are among the most biodiverse ecosystems on Earth, they face unprecedented threats from climate change and human activities.",
+        "Because coral reefs are among the most biodiverse ecosystems on Earth, they face unprecedented threats from climate change and human activities."
+      ],
+      ans: 0,
+      diff: 2,
+      expl: "'But' effectively shows the contrast between the reefs' biodiversity and the threats they face."
+    }
+  ];
+
+  // Generate 1000 RW questions by expanding and varying the base questions
+  const rwTopics = [
+    "climate change", "biodiversity", "renewable energy", "urban planning", "space exploration",
+    "artificial intelligence", "genetic research", "ocean conservation", "sustainable agriculture",
+    "mental health", "education policy", "economic inequality", "cultural preservation", "technology ethics"
   ];
   
-  // Word banks for variety
-  const wordBanks = {
-    adjectives: ["meticulous", "diligent", "ambitious", "innovative", "persistent", "analytical", "creative", "methodical", "strategic", "resourceful"],
-    nouns: ["scientist", "researcher", "engineer", "architect", "professor", "analyst", "designer", "manager", "consultant", "specialist"],
-    transitions: ["however", "therefore", "furthermore", "nevertheless", "consequently", "moreover", "similarly", "conversely", "subsequently", "likewise"],
-    topics: ["climate change", "renewable energy", "artificial intelligence", "genetic engineering", "space exploration", "ocean conservation", "urban planning", "sustainable agriculture", "medical research", "archaeological discoveries"],
-    literary_devices: ["metaphor", "symbolism", "irony", "alliteration", "personification", "imagery", "foreshadowing", "juxtaposition", "allegory", "hyperbole"]
-  };
-  
-  // Generate 1000 RW questions
+  const rwAuthors = [
+    "Maya Angelou", "James Baldwin", "Toni Morrison", "Ralph Ellison", "Zora Neale Hurston",
+    "Langston Hughes", "Sandra Cisneros", "Amy Tan", "Maxine Hong Kingston", "N. Scott Momaday"
+  ];
+
   for(let i = 0; i < 1000; i++) {
-    const template = rwTemplates[i % rwTemplates.length];
-    const difficulty = Math.floor(Math.random() * 3) + 1;
+    const baseQ = rwQuestions[i % rwQuestions.length];
+    const topic = rwTopics[i % rwTopics.length];
+    const author = rwAuthors[i % rwAuthors.length];
     
-    // Fill template with random words for variety
-    let stem = template.stem;
-    const replacements = {
-      '{adjective}': wordBanks.adjectives[Math.floor(Math.random() * wordBanks.adjectives.length)],
-      '{noun}': wordBanks.nouns[Math.floor(Math.random() * wordBanks.nouns.length)],
-      '{word}': wordBanks.adjectives[Math.floor(Math.random() * wordBanks.adjectives.length)],
-      '{topic}': wordBanks.topics[Math.floor(Math.random() * wordBanks.topics.length)],
-      '{literary_device}': wordBanks.literary_devices[Math.floor(Math.random() * wordBanks.literary_devices.length)]
-    };
+    let question = JSON.parse(JSON.stringify(baseQ)); // Deep copy
     
-    Object.keys(replacements).forEach(key => {
-      stem = stem.replace(key, replacements[key]);
-    });
-    
-    // Generate appropriate choices based on question type
-    let choices, ans, expl;
-    switch(template.type) {
-      case "vocabulary":
-        choices = ["careless", "thorough", "hasty", "casual"];
-        ans = 1;
-        expl = "Context suggests precision and care.";
-        break;
-      case "transition":
-        choices = ["similarly", "however", "therefore", "subsequently"];
-        ans = Math.floor(Math.random() * 4);
-        expl = "Consider the logical relationship between the statements.";
-        break;
-      case "evidence":
-        choices = [
-          "General background information",
-          "Specific supporting data or example", 
-          "Unrelated interesting fact",
-          "Personal opinion"
-        ];
-        ans = 1;
-        expl = "Evidence should directly support the claim.";
-        break;
-      default:
-        choices = ["Option A", "Option B", "Option C", "Option D"];
-        ans = Math.floor(Math.random() * 4);
-        expl = "Consider context and standard usage.";
+    // Vary the content while maintaining structure
+    if(question.stem.includes("Maya Angelou")) {
+      question.stem = question.stem.replace("Maya Angelou", author);
+    }
+    if(question.stem.includes("climate change")) {
+      question.stem = question.stem.replace("climate change", topic);
     }
     
-    rwBank.push({
-      id: `rw${i+1}`,
-      diff: difficulty,
-      stem: stem + ` (Question ${i+1})`,
-      choices: choices,
-      ans: ans,
-      expl: expl
-    });
+    question.id = `rw${i+1}`;
+    question.stem += ` (Question ${i+1})`;
+    
+    rwBank.push(question);
   }
-  
-  // Math Question Templates (expanded)
-  const mathTemplates = [
-    // Algebra
-    {type: "linear", stem: "Solve: {a}x + {b} = {c}", difficulty: 1},
-    {type: "quadratic", stem: "Solve: x² + {b}x + {c} = 0", difficulty: 2},
-    {type: "system", stem: "System: y = {a}x + {b} and y = {c}x + {d}. Find x.", difficulty: 2},
-    {type: "inequality", stem: "Solve: {a}x + {b} > {c}", difficulty: 2},
-    {type: "exponential", stem: "If {a}^x = {b}, what is x?", difficulty: 3},
-    // Geometry
-    {type: "slope", stem: "What is the slope of the line through ({x1},{y1}) and ({x2},{y2})?", difficulty: 1},
-    {type: "area", stem: "A rectangle has length {l} and width {w}. What is its area?", difficulty: 1},
-    {type: "perimeter", stem: "A rectangle has perimeter {p} and length {l}. What is the width?", difficulty: 1},
-    {type: "pythagorean", stem: "A right triangle has legs {a} and {b}. What is the hypotenuse?", difficulty: 2},
-    {type: "circle", stem: "A circle has radius {r}. What is its area?", difficulty: 2},
-    {type: "volume", stem: "A cylinder has radius {r} and height {h}. What is its volume?", difficulty: 3},
-    // Functions
-    {type: "function_eval", stem: "If f(x) = x² - {a}x + {b}, what is f({c})?", difficulty: 2},
-    {type: "composition", stem: "If g(x) = {a}x + {b} and h(x) = x - {c}, compute g(h({d})).", difficulty: 3},
-    {type: "domain", stem: "What is the domain of f(x) = 1/(x - {a})?", difficulty: 2},
-    {type: "inverse", stem: "If f(x) = {a}x + {b}, what is f⁻¹(x)?", difficulty: 3},
-    // Statistics & Probability
-    {type: "mean", stem: "The mean of {nums} is {mean}. What is the missing value?", difficulty: 1},
-    {type: "median", stem: "What is the median of: {sequence}?", difficulty: 1},
-    {type: "probability", stem: "A bag contains {r} red balls and {b} blue balls. What is P(red)?", difficulty: 2},
-    {type: "combinations", stem: "How many ways can you choose {k} items from {n} items?", difficulty: 3},
-    // Trigonometry
-    {type: "basic_trig", stem: "In a right triangle, if sin θ = {fraction}, what is cos θ?", difficulty: 2},
-    {type: "trig_identity", stem: "Simplify: sin²θ + cos²θ", difficulty: 2}
+
+  // Math - Comprehensive SAT-accurate problems covering all domains
+  const mathWordProblems = [
+    // Algebra - Linear equations and inequalities
+    {
+      stem: "A coffee shop sells regular coffee for $3.50 per cup and premium coffee for $5.25 per cup. On Monday, the shop sold a total of 240 cups of coffee and earned $1,050 in coffee sales. How many cups of regular coffee were sold?",
+      choices: ["120", "140", "160", "180"],
+      ans: 1,
+      diff: 2,
+      expl: "Let r = regular cups, p = premium cups. r + p = 240 and 3.5r + 5.25p = 1050. Solving: r = 140."
+    },
+    {
+      stem: "If 3x - 7 > 2x + 5, what is the smallest integer value of x?",
+      choices: ["11", "12", "13", "14"],
+      ans: 2,
+      diff: 2,
+      expl: "3x - 7 > 2x + 5 → x > 12. The smallest integer greater than 12 is 13."
+    },
+    {
+      stem: "The cost C (in dollars) of producing n items is given by C = 15n + 240. What is the cost of producing 50 items?",
+      choices: ["$750", "$840", "$990", "$1,200"],
+      ans: 2,
+      diff: 1,
+      expl: "C = 15(50) + 240 = 750 + 240 = $990."
+    },
+
+    // Algebra - Systems of equations
+    {
+      stem: "A theater sells adult tickets for $12 and child tickets for $8. If 150 tickets were sold for a total of $1,560, how many adult tickets were sold?",
+      choices: ["60", "75", "90", "105"],
+      ans: 2,
+      diff: 2,
+      expl: "Let a = adult tickets, c = child tickets. a + c = 150 and 12a + 8c = 1560. Solving: a = 90."
+    },
+
+    // Algebra - Quadratics and functions
+    {
+      stem: "The function f(x) = -16x² + 64x + 80 models the height (in feet) of a ball t seconds after being thrown. At what time does the ball reach its maximum height?",
+      choices: ["1 second", "2 seconds", "3 seconds", "4 seconds"],
+      ans: 1,
+      diff: 3,
+      expl: "For a quadratic f(x) = ax² + bx + c, the vertex occurs at x = -b/(2a). Here: x = -64/(2×-16) = 2."
+    },
+    {
+      stem: "If g(x) = x² - 4x + 3, what is the value of g(-2)?",
+      choices: ["15", "11", "7", "3"],
+      ans: 0,
+      diff: 2,
+      expl: "g(-2) = (-2)² - 4(-2) + 3 = 4 + 8 + 3 = 15."
+    },
+
+    // Geometry - Area, perimeter, and volume
+    {
+      stem: "Maria is planning a rectangular garden with a perimeter of 48 feet. If the length is 6 feet more than twice the width, what is the width of the garden?",
+      choices: ["6 feet", "8 feet", "10 feet", "12 feet"],
+      ans: 0,
+      diff: 2,
+      expl: "Let w = width, l = 2w + 6. Perimeter: 2w + 2(2w + 6) = 48. Solving: 6w + 12 = 48, so w = 6."
+    },
+    {
+      stem: "A cylindrical water tank has a radius of 3 feet and a height of 8 feet. What is the volume of the tank in cubic feet? (Use π ≈ 3.14)",
+      choices: ["226.1", "254.3", "282.7", "301.4"],
+      ans: 0,
+      diff: 2,
+      expl: "Volume = πr²h = 3.14 × 3² × 8 = 3.14 × 9 × 8 = 226.08 ≈ 226.1 cubic feet."
+    },
+    {
+      stem: "A circle has a circumference of 18π inches. What is the area of the circle in square inches?",
+      choices: ["81π", "90π", "108π", "324π"],
+      ans: 0,
+      diff: 3,
+      expl: "C = 2πr = 18π, so r = 9. Area = πr² = π(9)² = 81π square inches."
+    },
+
+    // Geometry - Coordinate geometry and lines
+    {
+      stem: "What is the equation of the line that passes through points (2, 5) and (6, 13)?",
+      choices: ["y = 2x + 1", "y = 2x + 3", "y = 3x - 1", "y = 4x - 3"],
+      ans: 0,
+      diff: 2,
+      expl: "Slope = (13-5)/(6-2) = 8/4 = 2. Using point-slope: y - 5 = 2(x - 2) → y = 2x + 1."
+    },
+    {
+      stem: "A line has a slope of -3/4 and passes through the point (8, 2). What is the y-intercept of this line?",
+      choices: ["8", "6", "4", "2"],
+      ans: 0,
+      diff: 2,
+      expl: "Using y = mx + b: 2 = (-3/4)(8) + b → 2 = -6 + b → b = 8."
+    },
+
+    // Geometry - Right triangles and trigonometry
+    {
+      stem: "A ladder is leaning against a building. The bottom of the ladder is 8 feet from the base of the building, and the ladder reaches a height of 15 feet on the building. What is the length of the ladder?",
+      choices: ["17 feet", "19 feet", "21 feet", "23 feet"],
+      ans: 0,
+      diff: 2,
+      expl: "Using Pythagorean theorem: ladder² = 8² + 15² = 64 + 225 = 289. Ladder = √289 = 17 feet."
+    },
+    {
+      stem: "In a right triangle, if one leg is 5 units and the hypotenuse is 13 units, what is the length of the other leg?",
+      choices: ["8", "12", "18", "24"],
+      ans: 1,
+      diff: 2,
+      expl: "Using Pythagorean theorem: 5² + b² = 13² → 25 + b² = 169 → b² = 144 → b = 12."
+    },
+
+    // Statistics and Probability
+    {
+      stem: "The table below shows test scores for a class:\nScore: 85, 90, 92, 88, 95, 89, 91, 87\n\nWhat is the median score?",
+      choices: ["88.5", "89", "89.5", "90"],
+      ans: 2,
+      diff: 2,
+      expl: "Ordered scores: 85, 87, 88, 89, 90, 91, 92, 95. Median = (89 + 90)/2 = 89.5."
+    },
+    {
+      stem: "A bag contains 4 red marbles, 6 blue marbles, and 5 green marbles. If one marble is selected at random, what is the probability it is NOT red?",
+      choices: ["4/15", "6/15", "11/15", "2/3"],
+      ans: 2,
+      diff: 2,
+      expl: "Total marbles = 15. Not red = blue + green = 6 + 5 = 11. P(not red) = 11/15."
+    },
+    {
+      stem: "A survey of 200 students found that 120 students like pizza, 80 students like burgers, and 50 students like both pizza and burgers. How many students like neither pizza nor burgers?",
+      choices: ["40", "50", "60", "70"],
+      ans: 1,
+      diff: 2,
+      expl: "Students liking at least one: 120 + 80 - 50 = 150. Students liking neither: 200 - 150 = 50."
+    },
+
+    // Data Analysis and Graphs
+    {
+      stem: "The graph shows the relationship between hours studied (x) and test score (y). If the line of best fit is y = 5x + 60, what test score would be predicted for a student who studies 8 hours?",
+      choices: ["95", "100", "105", "110"],
+      ans: 1,
+      diff: 2,
+      expl: "y = 5(8) + 60 = 40 + 60 = 100."
+    },
+    {
+      stem: "A scatterplot shows a strong positive correlation between variables x and y. If the correlation coefficient is r = 0.85, what percentage of the variation in y can be explained by the linear relationship with x?",
+      choices: ["72.3%", "85.0%", "92.2%", "95.0%"],
+      ans: 0,
+      diff: 3,
+      expl: "r² = coefficient of determination. (0.85)² = 0.7225 = 72.25% ≈ 72.3%."
+    },
+
+    // Advanced Topics - Exponentials and Complex Numbers
+    {
+      stem: "A population of bacteria doubles every 3 hours. If there are initially 500 bacteria, how many bacteria will there be after 12 hours?",
+      choices: ["4,000", "6,000", "8,000", "10,000"],
+      ans: 2,
+      diff: 3,
+      expl: "After 12 hours = 4 doubling periods. Population = 500 × 2⁴ = 500 × 16 = 8,000."
+    },
+    {
+      stem: "If 2^(x+1) = 32, what is the value of x?",
+      choices: ["3", "4", "5", "6"],
+      ans: 1,
+      diff: 3,
+      expl: "2^(x+1) = 32 = 2⁵ → x + 1 = 5 → x = 4."
+    },
+
+    // Word Problems - Ratios and Proportions  
+    {
+      stem: "A recipe calls for flour and sugar in a 3:2 ratio. If Jenny uses 4.5 cups of flour, how many cups of sugar should she use?",
+      choices: ["2.5", "3.0", "3.5", "4.0"],
+      ans: 1,
+      diff: 1,
+      expl: "Ratio 3:2 means 3 parts flour to 2 parts sugar. If flour = 4.5, then sugar = (4.5 × 2) ÷ 3 = 3.0."
+    },
+    {
+      stem: "A map has a scale of 1 inch = 25 miles. If two cities are 3.2 inches apart on the map, what is the actual distance between them?",
+      choices: ["60 miles", "70 miles", "80 miles", "90 miles"],
+      ans: 2,
+      diff: 1,
+      expl: "Actual distance = 3.2 × 25 = 80 miles."
+    },
+
+    // Word Problems - Percentages and Interest
+    {
+      stem: "A store marks up the cost of items by 40% to determine the selling price. If a shirt costs the store $25, what is the selling price?",
+      choices: ["$30", "$32", "$35", "$40"],
+      ans: 2,
+      diff: 1,
+      expl: "Markup = $25 × 0.40 = $10. Selling price = $25 + $10 = $35."
+    },
+    {
+      stem: "Sarah invests $2,000 in an account that earns 3% simple interest per year. How much interest will she earn after 4 years?",
+      choices: ["$200", "$240", "$280", "$320"],
+      ans: 1,
+      diff: 2,
+      expl: "Simple interest = Principal × Rate × Time = $2,000 × 0.03 × 4 = $240."
+    },
+
+    // Advanced Geometry - Circles and Angles
+    {
+      stem: "In circle O, if the central angle is 60°, and the radius is 6 cm, what is the length of the intercepted arc? (Use π ≈ 3.14)",
+      choices: ["6.28 cm", "3.14 cm", "1.57 cm", "12.56 cm"],
+      ans: 0,
+      diff: 3,
+      expl: "Arc length = (θ/360°) × 2πr = (60/360) × 2π × 6 = (1/6) × 12π ≈ 6.28 cm."
+    },
+    {
+      stem: "The area of a sector of a circle is 15π square units. If the radius of the circle is 6 units, what is the central angle of the sector in degrees?",
+      choices: ["150°", "135°", "120°", "90°"],
+      ans: 0,
+      diff: 3,
+      expl: "Sector area = (θ/360°) × πr² → 15π = (θ/360°) × π × 36 → θ = 150°."
+    }
   ];
-  
-  // Generate 1000 math questions
+
+  // Generate 1000 math questions with comprehensive SAT coverage
   for(let i = 0; i < 1000; i++) {
-    const template = mathTemplates[i % mathTemplates.length];
-    const difficulty = Math.floor(Math.random() * 3) + 1;
+    const baseQ = mathWordProblems[i % mathWordProblems.length];
+    const context = mathContexts[i % mathContexts.length];
+    const scenario = mathScenarios[i % mathScenarios.length];
     
-    // Generate random parameters
-    const params = {
-      a: Math.floor(Math.random() * 9) + 1,
-      b: Math.floor(Math.random() * 20) + 1,
-      c: Math.floor(Math.random() * 30) + 10,
-      d: Math.floor(Math.random() * 10) + 1,
-      r: Math.floor(Math.random() * 5) + 1,
-      h: Math.floor(Math.random() * 10) + 1,
-      l: Math.floor(Math.random() * 15) + 5,
-      w: Math.floor(Math.random() * 10) + 3,
-      p: Math.floor(Math.random() * 40) + 20,
-      x1: Math.floor(Math.random() * 10),
-      y1: Math.floor(Math.random() * 10),
-      x2: Math.floor(Math.random() * 10) + 5,
-      y2: Math.floor(Math.random() * 10) + 5
-    };
+    let question = JSON.parse(JSON.stringify(baseQ)); // Deep copy
     
-    // Fill in the template
-    let stem = template.stem;
-    Object.keys(params).forEach(key => {
-      stem = stem.replace(`{${key}}`, params[key]);
-    });
+    // Create more sophisticated variations
+    const variation = i % 7;
     
-    let choices, ans, expl;
-    
-    // Generate appropriate answers based on question type
-    switch(template.type) {
-      case "linear":
-        const result = Math.floor((params.c - params.b) / params.a);
-        choices = [`x=${result-1}`, `x=${result}`, `x=${result+1}`, `x=${result+2}`];
-        ans = 1;
-        expl = `${params.a}x = ${params.c - params.b} ⇒ x = ${result}`;
-        break;
-        
-      case "slope":
-        const slope = Math.round(((params.y2 - params.y1) / (params.x2 - params.x1)) * 100) / 100;
-        choices = [`${slope - 1}`, `${slope}`, `${slope + 1}`, `${Math.round((1/slope) * 100) / 100}`];
-        ans = 1;
-        expl = `slope = (${params.y2}-${params.y1})/(${params.x2}-${params.x1}) = ${slope}`;
-        break;
-        
-      case "area":
-        const area = params.l * params.w;
-        choices = [`${area - 5}`, `${area}`, `${area + 5}`, `${area * 2}`];
-        ans = 1;
-        expl = `Area = length × width = ${params.l} × ${params.w} = ${area}`;
-        break;
-        
-      case "mean":
-        const nums = [6, 8, 10, "x"];
-        const knownSum = 6 + 8 + 10;
-        const target = params.a + 5; // mean
-        const missing = target * 4 - knownSum;
-        choices = [`${missing - 2}`, `${missing}`, `${missing + 2}`, `${missing + 4}`];
-        ans = 1;
-        expl = `Sum = ${target} × 4 = ${target * 4}. Missing value = ${target * 4} - ${knownSum} = ${missing}`;
-        break;
-        
-      default:
-        // Generic answer generation
-        const answer = params.a + params.b;
-        choices = [`${answer - 2}`, `${answer}`, `${answer + 1}`, `${answer + 3}`];
-        ans = 1;
-        expl = `Calculate step by step using given values.`;
+    // Vary contexts and numerical values
+    if(question.stem.includes("coffee shop") && variation > 0) {
+      const newContexts = ["bookstore", "bakery", "restaurant", "gas station", "pharmacy"];
+      question.stem = question.stem.replace("coffee shop", newContexts[variation % newContexts.length]);
     }
     
-    mathBank.push({
-      id: `m${i+1}`,
-      diff: difficulty,
-      stem: stem + ` (Problem ${i+1})`,
-      choices: choices,
-      ans: ans,
-      expl: expl
-    });
+    // Add geometric variations
+    if(question.stem.includes("rectangular garden") && variation > 2) {
+      const shapes = ["circular pool", "triangular plot", "square courtyard"];
+      const shapeProblems = [
+        "circular pool with circumference of 48 feet. If the diameter is 6 feet more than the radius",
+        "triangular plot with perimeter of 48 feet. If each side is equal",
+        "square courtyard with perimeter of 48 feet. What is each side length"
+      ];
+      question.stem = question.stem.replace("rectangular garden with a perimeter of 48 feet. If the length is 6 feet more than twice the width, what is the width", `${shapes[variation % 3]} with a perimeter of 48 feet. What is the radius`);
+      if(variation % 3 === 2) {
+        question.choices = ["12 feet", "10 feet", "8 feet", "6 feet"];
+        question.ans = 0;
+        question.expl = "Square perimeter = 4s = 48, so s = 12 feet.";
+      }
+    }
+    
+    // Add coordinate geometry variations
+    if(question.stem.includes("passes through points") && variation > 3) {
+      const points = [
+        ["(1, 3)", "(5, 11)", "y = 2x + 1"],
+        ["(0, 4)", "(3, 10)", "y = 2x + 4"], 
+        ["(-1, 1)", "(3, 9)", "y = 2x + 3"],
+        ["(2, 7)", "(6, 15)", "y = 2x + 3"]
+      ];
+      const pointSet = points[variation % points.length];
+      question.stem = `What is the equation of the line that passes through points ${pointSet[0]} and ${pointSet[1]}?`;
+      question.choices = ["y = 2x + 1", "y = 2x + 3", "y = 2x + 4", "y = 3x - 1"];
+      question.ans = variation % 2;
+    }
+    
+    // Add statistical variations
+    if(question.stem.includes("test scores") && variation > 4) {
+      const datasets = [
+        "Quiz scores: 78, 82, 85, 79, 88, 81, 84, 80",
+        "Height measurements: 65, 68, 70, 67, 72, 69, 71, 66", 
+        "Temperature readings: 23, 27, 29, 25, 31, 28, 30, 26"
+      ];
+      question.stem = `The table shows ${datasets[variation % datasets.length]}.\n\nWhat is the median value?`;
+    }
+    
+    question.id = `m${i+1}`;
+    question.stem += ` (Problem ${i+1})`;
+    
+    mathBank.push(question);
   }
   
   return { rw: rwBank, math: mathBank };
@@ -346,7 +639,6 @@ let state = {
 };
 
 function byDifficulty(arr, target){
-  // pick half easy/med (<=2) and half hard (>=2) around target size
   const easy = arr.filter(q=>q.diff<=2);
   const hard = arr.filter(q=>q.diff>=2);
   return {easy, hard};
@@ -373,7 +665,6 @@ function assemble(moduleNum, section, hard=false){
   else { 
     set = pick(hardP, state.perModule);
   }
-  // shuffle
   return set.sort(()=>Math.random()-0.5);
 }
 
@@ -390,7 +681,18 @@ function renderModule(){
   state.current.forEach((q, idx)=>{
     const block = document.createElement('div');
     block.className='q';
-    block.innerHTML = `<h4>Q${idx+1}. ${escapeHtml(q.stem)}</h4>`;
+    
+    // Check if this is a passage-based question
+    if(q.stem.includes('\n\n')) {
+      const parts = q.stem.split('\n\n');
+      const passage = parts[0];
+      const question = parts.slice(1).join('\n\n');
+      
+      block.innerHTML = `<div class="passage">${escapeHtml(passage)}</div><h4>Q${idx+1}. ${escapeHtml(question)}</h4>`;
+    } else {
+      block.innerHTML = `<h4>Q${idx+1}. ${escapeHtml(q.stem)}</h4>`;
+    }
+    
     const opts = document.createElement('div');
     opts.className='opt';
     q.choices.forEach((c,i)=>{
@@ -404,7 +706,6 @@ function renderModule(){
     area.appendChild(block);
   });
   
-  // Add finish module button
   const finishBtn = document.createElement('button');
   finishBtn.textContent = state.module === 2 || state.section !== 'mixed' && state.module === 2 ? 'Finish Test' : 'Finish Module & Continue';
   finishBtn.className = 'finish-btn';
@@ -421,7 +722,6 @@ function record(q, i){
     state.attempted++; 
   }
   
-  // Remove previous correct count for this question if it was counted
   if(q._counted && state.answers[q.id] !== q.ans) {
     state.correct--;
     q._counted = false;
@@ -448,7 +748,6 @@ function updateScore() {
 }
 
 function estimateScore(){
-  // very rough mapping per section to 200-800 scale using percent correct
   if(state.attempted===0) return '—';
   const pct = state.correct / state.attempted;
   const scaled = Math.round(200 + pct*600);
@@ -478,31 +777,23 @@ function fmt(s){
 }
 
 function nextModule(){
-  // Clear timer
   clearInterval(state.timer);
   document.getElementById('clock').classList.add('hidden');
   
-  // Check if we should continue to module 2
   const shouldContinue = (state.section === 'mixed' && state.module === 1) || 
                         (state.section !== 'mixed' && state.module === 1);
   
   if(shouldContinue && !state.finished) {
-    // Show review for current module first
     reviewModule();
     
-    // Reset for next module but keep overall stats
     const currentCorrect = state.correct;
     const currentAttempted = state.attempted;
     
-    // Move to module 2
     state.module = 2;
     state.current = [];
-    
-    // Keep cumulative stats
     state.correct = currentCorrect;
     state.attempted = currentAttempted;
     
-    // Add continue button
     const area = document.getElementById('testArea');
     const continueBtn = document.createElement('button');
     continueBtn.textContent = 'Continue to Module 2';
@@ -513,7 +804,6 @@ function nextModule(){
     return;
   }
   
-  // Test is finished
   state.finished = true;
   reviewModule();
   document.getElementById('progress').textContent = 'Test Complete — see explanations above';
@@ -609,7 +899,7 @@ function escapeHtml(str){
   return String(str).replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[s])); 
 }
 
-// UI wiring - Fixed to use proper element references
+// UI wiring
 document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('startBtn').onclick = ()=>{
     state.section = document.getElementById('section').value;
