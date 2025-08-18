@@ -548,7 +548,17 @@ function generateQuestionBank() {
     }
   ];
 
-  // Generate 1000 math questions with comprehensive SAT coverage
+  // Generate 1000 math questions by creating variations
+  const mathContexts = [
+    "coffee shop", "restaurant", "bookstore", "gas station", "movie theater",
+    "school", "library", "park", "museum", "shopping mall"
+  ];
+  
+  const mathScenarios = [
+    "sales", "inventory", "pricing", "attendance", "capacity",
+    "distance", "time", "population", "growth", "comparison"
+  ];
+
   for(let i = 0; i < 1000; i++) {
     const baseQ = mathWordProblems[i % mathWordProblems.length];
     const context = mathContexts[i % mathContexts.length];
@@ -556,53 +566,20 @@ function generateQuestionBank() {
     
     let question = JSON.parse(JSON.stringify(baseQ)); // Deep copy
     
-    // Create more sophisticated variations
-    const variation = i % 7;
+    // Create variations by changing numbers and contexts
+    const variation = i % 5;
     
-    // Vary contexts and numerical values
     if(question.stem.includes("coffee shop") && variation > 0) {
-      const newContexts = ["bookstore", "bakery", "restaurant", "gas station", "pharmacy"];
-      question.stem = question.stem.replace("coffee shop", newContexts[variation % newContexts.length]);
+      question.stem = question.stem.replace("coffee shop", context);
     }
     
-    // Add geometric variations
-    if(question.stem.includes("rectangular garden") && variation > 2) {
-      const shapes = ["circular pool", "triangular plot", "square courtyard"];
-      const shapeProblems = [
-        "circular pool with circumference of 48 feet. If the diameter is 6 feet more than the radius",
-        "triangular plot with perimeter of 48 feet. If each side is equal",
-        "square courtyard with perimeter of 48 feet. What is each side length"
-      ];
-      question.stem = question.stem.replace("rectangular garden with a perimeter of 48 feet. If the length is 6 feet more than twice the width, what is the width", `${shapes[variation % 3]} with a perimeter of 48 feet. What is the radius`);
-      if(variation % 3 === 2) {
-        question.choices = ["12 feet", "10 feet", "8 feet", "6 feet"];
-        question.ans = 0;
-        question.expl = "Square perimeter = 4s = 48, so s = 12 feet.";
-      }
-    }
-    
-    // Add coordinate geometry variations
-    if(question.stem.includes("passes through points") && variation > 3) {
-      const points = [
-        ["(1, 3)", "(5, 11)", "y = 2x + 1"],
-        ["(0, 4)", "(3, 10)", "y = 2x + 4"], 
-        ["(-1, 1)", "(3, 9)", "y = 2x + 3"],
-        ["(2, 7)", "(6, 15)", "y = 2x + 3"]
-      ];
-      const pointSet = points[variation % points.length];
-      question.stem = `What is the equation of the line that passes through points ${pointSet[0]} and ${pointSet[1]}?`;
-      question.choices = ["y = 2x + 1", "y = 2x + 3", "y = 2x + 4", "y = 3x - 1"];
-      question.ans = variation % 2;
-    }
-    
-    // Add statistical variations
-    if(question.stem.includes("test scores") && variation > 4) {
-      const datasets = [
-        "Quiz scores: 78, 82, 85, 79, 88, 81, 84, 80",
-        "Height measurements: 65, 68, 70, 67, 72, 69, 71, 66", 
-        "Temperature readings: 23, 27, 29, 25, 31, 28, 30, 26"
-      ];
-      question.stem = `The table shows ${datasets[variation % datasets.length]}.\n\nWhat is the median value?`;
+    // Vary numerical values slightly
+    if(variation === 1) {
+      question.stem = question.stem.replace(/\$3\.50/g, "$3.75");
+      question.stem = question.stem.replace(/\$5\.25/g, "$5.50");
+    } else if(variation === 2) {
+      question.stem = question.stem.replace(/240/g, "260");
+      question.stem = question.stem.replace(/\$1,050/g, "$1,170");
     }
     
     question.id = `m${i+1}`;
