@@ -27,6 +27,8 @@
     .opt{display:grid;gap:8px;margin:15px 0}
     .opt label{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:#0b1224;cursor:pointer;transition:all 0.2s}
     .opt label:hover{background:#0f1630;border-color:rgba(106,166,255,.3)}
+    .opt label.correct{background:rgba(121,242,192,.1);border-color:var(--accent)}
+    .opt label.incorrect{background:rgba(255,107,107,.1);border-color:var(--danger)}
     .timer{font-variant-numeric:tabular-nums;font-weight:800}
     .good{color:var(--accent)} .bad{color:var(--danger)}
     .hidden{display:none}
@@ -35,15 +37,10 @@
     .scorechip{background:#0f1a31;border:1px solid rgba(255,255,255,.08);padding:8px 12px;border-radius:12px;color:var(--fg)}
     .passage{background:#0f1a31;padding:16px;border-radius:12px;margin:12px 0;color:var(--muted);border-left:4px solid var(--brand);line-height:1.6}
     .finish-btn{margin-top:20px;background:linear-gradient(135deg,var(--accent),#5ee3b3);color:#071126}
-    .calculator-container{background:#0f1630;border-radius:12px;margin:10px 0;overflow:hidden;position:fixed;top:20px;right:20px;width:350px;z-index:999}
-    .calculator-header{padding:10px;background:#1a2332;color:var(--fg);font-weight:600;display:flex;justify-content:space-between;align-items:center}
-    .ai-helper{position:fixed;bottom:20px;right:20px;width:350px;background:rgba(18,24,42,.95);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:16px;box-shadow:0 20px 40px rgba(0,0,0,.3);z-index:1000}
-    .ai-input{width:100%;padding:10px;background:#0b1224;border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--fg);margin:8px 0;resize:vertical}
-    .ai-response{max-height:200px;overflow-y:auto;background:#0b1224;padding:10px;border-radius:8px;margin:8px 0;color:var(--muted);line-height:1.4}
-    .toggle-calc{background:var(--brand);color:white;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:12px}
-    .math-formula{font-family:'Times New Roman',serif;font-style:italic;background:#0a1020;padding:8px 12px;border-radius:6px;display:inline-block;margin:4px 0}
+    .explanation{margin-top:12px;padding:12px;background:#0a1020;border-radius:8px;color:var(--muted);font-size:14px}
+    .notification{position:fixed;top:20px;right:20px;background:var(--accent);color:#071126;padding:12px 20px;border-radius:8px;font-weight:600;z-index:1001;transform:translateY(-100px);transition:transform 0.3s}
+    .notification.show{transform:translateY(0)}
   </style>
-  <script src="https://www.desmos.com/api/v1.7/calculator.js?apikey=dcb31709b452b1cf9dc26972add0fda6"></script>
 </head>
 <body>
   <div class="wrap">
@@ -81,47 +78,30 @@
       </div>
     </div>
 
-    <div id="testArea" class="card" style="margin-top:16px"></div>
+    <div id="testArea" class="card" style="margin-top:16px">
+      <h3 style="color:var(--fg);margin:0 0 16px">Click "Generate Test" to begin your SAT practice</h3>
+      <p style="color:var(--muted)">Select your preferences above and start practicing with real SAT-style questions.</p>
+    </div>
 
     <div class="card" style="margin-top:16px">
       <h3 style="color:var(--fg);margin:0 0 8px">Tools & Resources</h3>
       <div class="flex">
         <button id="exportBtn">Export Results</button>
         <button class="secondary" id="importBtn">Import Questions</button>
-        <button class="ai-btn" id="toggleAI">Toggle AI Helper</button>
-        <button class="secondary" id="calcBtn">Show Calculator</button>
+        <button class="ai-btn" id="toggleAI">AI Helper</button>
+        <button class="secondary" id="calcBtn">Calculator</button>
       </div>
     </div>
 
     <p class="footer">Advanced SAT Practice Generator • Not affiliated with College Board • For practice only</p>
   </div>
 
-  <!-- Desmos Calculator (shown for math questions) -->
-  <div id="calculatorContainer" class="calculator-container hidden">
-    <div class="calculator-header">
-      <span>Desmos Graphing Calculator</span>
-      <span class="toggle-calc" onclick="toggleCalculator()">Hide</span>
-    </div>
-    <div id="calculator" style="height:300px;width:100%;"></div>
-  </div>
-
-  <!-- AI Helper -->
-  <div id="aiHelper" class="ai-helper hidden">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <h4 style="color:var(--fg);margin:0">AI Study Assistant</h4>
-      <span style="cursor:pointer;color:var(--muted)" onclick="toggleAI()">✕</span>
-    </div>
-    <textarea id="aiInput" class="ai-input" placeholder="Ask me about any math or English concept, or get help with a specific question..."></textarea>
-    <button onclick="askAI()" style="width:100%;margin:5px 0">Ask AI</button>
-    <div id="aiResponse" class="ai-response">AI assistant ready to help with SAT prep!</div>
-  </div>
+  <div id="notification" class="notification">Test generated successfully!</div>
 
 <script>
-// Comprehensive SAT Question Banks - 250 Questions Each Section
-
+// Comprehensive SAT Question Banks
 const questionBanks = {
   math: [
-    // Algebra I (Basic) - Questions 1-60
     {
       id: "m1", stem: "If 3x + 7 = 22, what is the value of x?", 
       choices: ["3", "5", "7", "15"], ans: 1, diff: 1,
@@ -172,132 +152,84 @@ const questionBanks = {
       choices: ["1", "2", "3", "4"], ans: 1, diff: 2,
       expl: "2(3) + 3y = 12 → 6 + 3y = 12 → 3y = 6 → y = 2"
     },
-
-    // Quadratic Functions - Questions 11-25
     {
       id: "m11", stem: "What are the solutions to x² - 5x + 6 = 0?", 
       choices: ["x = 2 or x = 3", "x = 1 or x = 6", "x = -2 or x = -3", "x = 5 or x = 6"], ans: 0, diff: 2,
       expl: "Factor: (x - 2)(x - 3) = 0, so x = 2 or x = 3"
     },
     {
-      id: "m12", stem: "A projectile is launched upward with initial velocity 64 ft/s. Its height h (in feet) after t seconds is h = -16t² + 64t. When does it reach maximum height?", 
-      choices: ["1 second", "2 seconds", "3 seconds", "4 seconds"], ans: 1, diff: 3,
-      expl: "For h = -16t² + 64t, maximum occurs at t = -b/(2a) = -64/(2(-16)) = 2 seconds"
-    },
-    {
-      id: "m13", stem: "The function f(x) = x² - 4x + 3 has its vertex at:", 
-      choices: ["(2, -1)", "(2, 1)", "(-2, -1)", "(-2, 1)"], ans: 0, diff: 3,
-      expl: "Vertex x-coordinate: x = -(-4)/(2(1)) = 2. f(2) = 4 - 8 + 3 = -1. Vertex: (2, -1)"
-    },
-    {
-      id: "m14", stem: "A ball is thrown from a height of 6 feet with velocity 40 ft/s. Using h = -16t² + 40t + 6, when does it hit the ground?", 
-      choices: ["2.5 seconds", "2.6 seconds", "2.7 seconds", "2.8 seconds"], ans: 1, diff: 3,
-      expl: "Set h = 0: -16t² + 40t + 6 = 0. Using quadratic formula: t ≈ 2.6 seconds"
-    },
-    {
-      id: "m15", stem: "What is the y-intercept of y = 2x² - 3x + 5?", 
-      choices: ["2", "3", "5", "-3"], ans: 2, diff: 1,
-      expl: "The y-intercept occurs when x = 0: y = 2(0)² - 3(0) + 5 = 5"
-    },
-
-    // Geometry - Questions 26-60
-    {
-      id: "m26", stem: "A right triangle has legs of length 9 and 12. What is the length of the hypotenuse?", 
+      id: "m12", stem: "A right triangle has legs of length 9 and 12. What is the length of the hypotenuse?", 
       choices: ["15", "18", "21", "25"], ans: 0, diff: 2,
       expl: "Using Pythagorean theorem: c² = 9² + 12² = 81 + 144 = 225, so c = 15"
     },
     {
-      id: "m27", stem: "A circular pizza has diameter 16 inches. What is its area? (Use π ≈ 3.14)", 
+      id: "m13", stem: "A circular pizza has diameter 16 inches. What is its area? (Use π ≈ 3.14)", 
       choices: ["50.24 in²", "100.48 in²", "200.96 in²", "803.84 in²"], ans: 2, diff: 2,
       expl: "Radius = 8 inches. Area = πr² = 3.14 × 8² = 3.14 × 64 = 200.96 in²"
     },
     {
-      id: "m28", stem: "In the coordinate plane, what is the distance between points (1, 3) and (7, 11)?", 
-      choices: ["10", "12", "14", "16"], ans: 0, diff: 3,
-      expl: "Distance = √[(7-1)² + (11-3)²] = √[36 + 64] = √100 = 10"
-    },
-    {
-      id: "m29", stem: "A rectangular pool is 20 feet long and 15 feet wide. If a walkway 3 feet wide surrounds the pool, what is the area of the walkway?", 
-      choices: ["222 sq ft", "234 sq ft", "246 sq ft", "258 sq ft"], ans: 1, diff: 3,
-      expl: "Total area: 26 × 21 = 546. Pool area: 20 × 15 = 300. Walkway: 546 - 300 = 246 sq ft"
-    },
-    {
-      id: "m30", stem: "A cylinder has radius 4 cm and height 10 cm. What is its volume? (Use π ≈ 3.14)", 
-      choices: ["251.2 cm³", "502.4 cm³", "1005.6 cm³", "2010.4 cm³"], ans: 1, diff: 2,
-      expl: "Volume = πr²h = 3.14 × 4² × 10 = 3.14 × 16 × 10 = 502.4 cm³"
-    },
-
-    // Trigonometry - Questions 61-100
-    {
-      id: "m61", stem: "In a right triangle, if sin θ = 3/5, what is cos θ?", 
+      id: "m14", stem: "In a right triangle, if sin θ = 3/5, what is cos θ?", 
       choices: ["3/4", "4/5", "4/3", "5/4"], ans: 1, diff: 3,
       expl: "If sin θ = 3/5, then opposite = 3, hypotenuse = 5. Using Pythagorean theorem: adjacent = 4. So cos θ = 4/5"
     },
     {
-      id: "m62", stem: "A 20-foot ladder leans against a wall at an angle of 60° with the ground. How high up the wall does it reach?", 
-      choices: ["10 feet", "10√3 feet", "17.3 feet", "20 feet"], ans: 2, diff: 3,
-      expl: "Height = 20 × sin(60°) = 20 × (√3/2) = 10√3 ≈ 17.3 feet"
-    },
-    {
-      id: "m63", stem: "What is the value of tan(45°)?", 
-      choices: ["0", "1/2", "1", "√2"], ans: 2, diff: 2,
-      expl: "In a 45-45-90 triangle, opposite equals adjacent, so tan(45°) = 1"
-    },
-
-    // Statistics and Probability - Questions 101-150
-    {
-      id: "m101", stem: "A survey of 500 students found that 60% prefer online classes, 35% prefer in-person classes, and 5% have no preference. How many students prefer online classes?", 
+      id: "m15", stem: "A survey of 500 students found that 60% prefer online classes. How many students prefer online classes?", 
       choices: ["250", "300", "350", "400"], ans: 1, diff: 1,
       expl: "60% of 500 = 0.60 × 500 = 300 students"
     },
     {
-      id: "m102", stem: "The test scores in a class are: 85, 90, 78, 92, 88, 85, 90, 95. What is the median score?", 
-      choices: ["87", "88", "89", "90"], ans: 2, diff: 2,
-      expl: "Ordered scores: 78, 85, 85, 88, 90, 90, 92, 95. Median = average of 4th and 5th values = (88 + 90)/2 = 89"
-    },
-    {
-      id: "m103", stem: "A bag contains 5 red marbles, 3 blue marbles, and 2 green marbles. What is the probability of drawing a blue marble?", 
-      choices: ["1/5", "3/10", "1/3", "2/5"], ans: 1, diff: 2,
-      expl: "Total marbles = 5 + 3 + 2 = 10. Probability of blue = 3/10"
-    },
-
-    // Advanced Functions - Questions 151-200
-    {
-      id: "m151", stem: "If f(x) = x² - 4x + 3, what is f(-2)?", 
+      id: "m16", stem: "If f(x) = x² - 4x + 3, what is f(-2)?", 
       choices: ["15", "11", "7", "3"], ans: 0, diff: 2,
       expl: "f(-2) = (-2)² - 4(-2) + 3 = 4 + 8 + 3 = 15"
     },
     {
-      id: "m152", stem: "The function g(x) = 2^x models exponential growth. What is g(4)?", 
-      choices: ["8", "16", "32", "64"], ans: 1, diff: 2,
-      expl: "g(4) = 2⁴ = 16"
-    },
-    {
-      id: "m153", stem: "If log₂(x) = 5, what is the value of x?", 
-      choices: ["10", "25", "32", "64"], ans: 2, diff: 3,
-      expl: "log₂(x) = 5 means 2⁵ = x, so x = 32"
-    },
-
-    // Calculus Basics - Questions 201-250
-    {
-      id: "m201", stem: "What is the derivative of f(x) = 3x² + 2x - 1?", 
+      id: "m17", stem: "What is the derivative of f(x) = 3x² + 2x - 1?", 
       choices: ["6x + 2", "3x + 2", "6x - 1", "3x - 1"], ans: 0, diff: 3,
       expl: "f'(x) = d/dx[3x²] + d/dx[2x] + d/dx[-1] = 6x + 2 + 0 = 6x + 2"
     },
     {
-      id: "m202", stem: "A particle moves with position function s(t) = t³ - 6t² + 9t. What is the velocity at t = 2?", 
-      choices: ["-3", "0", "3", "6"], ans: 0, diff: 3,
-      expl: "Velocity v(t) = s'(t) = 3t² - 12t + 9. At t = 2: v(2) = 3(4) - 12(2) + 9 = 12 - 24 + 9 = -3"
+      id: "m18", stem: "A cylinder has radius 4 cm and height 10 cm. What is its volume? (Use π ≈ 3.14)", 
+      choices: ["251.2 cm³", "502.4 cm³", "1005.6 cm³", "2010.4 cm³"], ans: 1, diff: 2,
+      expl: "Volume = πr²h = 3.14 × 4² × 10 = 3.14 × 16 × 10 = 502.4 cm³"
     },
     {
-      id: "m203", stem: "What is the slope of the tangent line to y = x² at the point (3, 9)?", 
-      choices: ["3", "6", "9", "12"], ans: 1, diff: 3,
-      expl: "dy/dx = 2x. At x = 3, slope = 2(3) = 6"
+      id: "m19", stem: "The test scores in a class are: 85, 90, 78, 92, 88, 85, 90, 95. What is the median score?", 
+      choices: ["87", "88", "89", "90"], ans: 2, diff: 2,
+      expl: "Ordered scores: 78, 85, 85, 88, 90, 90, 92, 95. Median = average of 4th and 5th values = (88 + 90)/2 = 89"
+    },
+    {
+      id: "m20", stem: "A bag contains 5 red marbles, 3 blue marbles, and 2 green marbles. What is the probability of drawing a blue marble?", 
+      choices: ["1/5", "3/10", "1/3", "2/5"], ans: 1, diff: 2,
+      expl: "Total marbles = 5 + 3 + 2 = 10. Probability of blue = 3/10"
+    },
+    {
+      id: "m21", stem: "If log₂(x) = 5, what is the value of x?", 
+      choices: ["10", "25", "32", "64"], ans: 2, diff: 3,
+      expl: "log₂(x) = 5 means 2⁵ = x, so x = 32"
+    },
+    {
+      id: "m22", stem: "What is the value of tan(45°)?", 
+      choices: ["0", "1/2", "1", "√2"], ans: 2, diff: 2,
+      expl: "In a 45-45-90 triangle, opposite equals adjacent, so tan(45°) = 1"
+    },
+    {
+      id: "m23", stem: "A 20-foot ladder leans against a wall at an angle of 60° with the ground. How high up the wall does it reach?", 
+      choices: ["10 feet", "10√3 feet", "17.3 feet", "20 feet"], ans: 2, diff: 3,
+      expl: "Height = 20 × sin(60°) = 20 × (√3/2) = 10√3 ≈ 17.3 feet"
+    },
+    {
+      id: "m24", stem: "In the coordinate plane, what is the distance between points (1, 3) and (7, 11)?", 
+      choices: ["10", "12", "14", "16"], ans: 0, diff: 3,
+      expl: "Distance = √[(7-1)² + (11-3)²] = √[36 + 64] = √100 = 10"
+    },
+    {
+      id: "m25", stem: "The function g(x) = 2^x models exponential growth. What is g(4)?", 
+      choices: ["8", "16", "32", "64"], ans: 1, diff: 2,
+      expl: "g(4) = 2⁴ = 16"
     }
   ],
 
   rw: [
-    // Grammar & Usage - Grade 9-10 Level - Questions 1-60
     {
       id: "rw1", 
       stem: "The student council ___ planning a fundraiser for the new computer lab.",
@@ -358,8 +290,6 @@ const questionBanks = {
       choices: ["that", "which", "who", "what"], ans: 1, diff: 2,
       expl: "'Which' is used in non-restrictive clauses (set off by commas)."
     },
-
-    // Sentence Structure & Style - Questions 11-30
     {
       id: "rw11",
       stem: "Which revision best combines these sentences?\n\nThe storm was approaching rapidly. The family decided to postpone their picnic. The weather forecast predicted heavy rain.",
@@ -382,10 +312,8 @@ const questionBanks = {
       ], ans: 2, diff: 2,
       expl: "Option C uses three parallel nouns: innovation, collaboration, and leadership."
     },
-
-    // Reading Comprehension - Grade 11-12 Level - Questions 31-120
     {
-      id: "rw31",
+      id: "rw13",
       stem: "The following passage is from a 2023 environmental science journal.\n\nClimate change represents one of the most pressing challenges of our time. Rising global temperatures have triggered a cascade of environmental changes, from melting ice caps to shifting precipitation patterns. These changes don't just affect polar bears and penguins; they have profound implications for human societies, agriculture, and economic systems worldwide. Recent studies indicate that crop yields in major agricultural regions could decline by up to 25% by 2050 if current trends continue.\n\nAccording to the passage, climate change:",
       choices: [
         "only affects Arctic animals like polar bears",
@@ -396,7 +324,7 @@ const questionBanks = {
       expl: "The passage explicitly states climate change affects environmental systems, human societies, agriculture, and economic systems - showing wide-ranging effects."
     },
     {
-      id: "rw32",
+      id: "rw14",
       stem: "Based on the previous passage, the author's primary purpose is to:",
       choices: [
         "persuade readers to take immediate action on climate change",
@@ -407,7 +335,7 @@ const questionBanks = {
       expl: "The author presents factual information about the broad scope of climate change effects without advocating specific actions or solutions."
     },
     {
-      id: "rw33",
+      id: "rw15",
       stem: "The following excerpt is from Frederick Douglass's 'Narrative of the Life of Frederick Douglass, an American Slave' (1845).\n\n'I have often been awakened at the dawn of day by the most heart-rending shrieks of an own aunt of mine, whom he used to tie up to a joist, and whip upon her naked back till she was literally covered with blood. No words, no tears, no prayers, from his gory victim, seemed to move his iron heart from its bloody purpose.'\n\nThe phrase 'iron heart' most effectively conveys:",
       choices: [
         "the master's physical strength",
@@ -417,10 +345,8 @@ const questionBanks = {
       ], ans: 1, diff: 3,
       expl: "The metaphor 'iron heart' suggests someone unmoved by emotion, highlighting the master's cruel indifference to suffering."
     },
-
-    // Literature Analysis - Grade 11-12 - Questions 121-180
     {
-      id: "rw121",
+      id: "rw16",
       stem: "The following excerpt is from Maya Angelou's 'I Know Why the Caged Bird Sings.'\n\n'The caged bird sings with a fearful trill / of things unknown but longed for still / and his tune is heard on the distant hill / for the caged bird sings of freedom.'\n\nThe 'caged bird' most likely symbolizes:",
       choices: [
         "literal imprisonment",
@@ -431,7 +357,7 @@ const questionBanks = {
       expl: "In Angelou's work, the caged bird is a metaphor for those who face oppression but still yearn for freedom and express that longing."
     },
     {
-      id: "rw122",
+      id: "rw17",
       stem: "In the previous excerpt, the phrase 'fearful trill' suggests:",
       choices: [
         "the bird's musical ability",
@@ -441,10 +367,8 @@ const questionBanks = {
       ], ans: 1, diff: 3,
       expl: "The combination of 'fearful' (anxiety) and 'trill' (hopeful song) captures the complex emotions of someone oppressed yet still hopeful."
     },
-
-    // Advanced Writing & Rhetoric - Questions 181-250
     {
-      id: "rw181",
+      id: "rw18",
       stem: "Which revision best improves the clarity and conciseness of this sentence?\n\n'Due to the fact that the weather was extremely bad and dangerous, the school officials made the decision to cancel all outdoor activities.'",
       choices: [
         "Because of extremely bad and dangerous weather, school officials decided to cancel all outdoor activities.",
@@ -455,13 +379,13 @@ const questionBanks = {
       expl: "Option C eliminates redundancy ('extremely bad and dangerous,' 'made the decision') while maintaining clarity and directness."
     },
     {
-      id: "rw182",
+      id: "rw19",
       stem: "In academic writing, which transition would best show contrast between two opposing viewpoints?",
       choices: ["Furthermore", "Nevertheless", "Similarly", "Consequently"], ans: 1, diff: 2,
       expl: "'Nevertheless' effectively signals contrast and opposition between ideas."
     },
     {
-      id: "rw183",
+      id: "rw20",
       stem: "Which sentence best demonstrates sophisticated vocabulary and sentence structure for a college-level essay?",
       choices: [
         "The book was really good and had lots of interesting parts that made me think.",
@@ -471,206 +395,43 @@ const questionBanks = {
       ], ans: 1, diff: 3,
       expl: "Option B uses academic vocabulary ('employs,' 'symbolism,' 'complex themes') and sophisticated structure appropriate for college writing."
     },
-
-    // Add more comprehensive questions to reach 250 total
-    // Vocabulary in Context - Questions 184-220
     {
-      id: "rw184",
+      id: "rw21",
       stem: "In the sentence 'The politician's speech was filled with platitudes that failed to address the substantive issues,' the word 'platitudes' most nearly means:",
       choices: ["harsh criticisms", "empty clichés", "detailed explanations", "personal attacks"], ans: 1, diff: 3,
       expl: "Platitudes are trite, meaningless statements - essentially empty clichés that lack substance."
     },
     {
-      id: "rw185",
+      id: "rw22",
       stem: "The scientist's hypothesis proved to be 'untenable' after the experiments. In this context, 'untenable' means:",
       choices: ["impossible to defend", "difficult to understand", "expensive to test", "dangerous to pursue"], ans: 0, diff: 3,
       expl: "Untenable means not capable of being defended or maintained, especially when faced with criticism or attack."
+    },
+    {
+      id: "rw23",
+      stem: "The author's tone in the passage can best be described as:",
+      choices: ["optimistic and encouraging", "objective and informative", "pessimistic and critical", "emotional and persuasive"], ans: 1, diff: 2,
+      expl: "The author presents facts without emotional language or bias, maintaining an objective, informative tone."
+    },
+    {
+      id: "rw24",
+      stem: "Which of the following best describes the structure of the argument?",
+      choices: ["cause and effect", "compare and contrast", "problem and solution", "chronological sequence"], ans: 0, diff: 2,
+      expl: "The passage establishes causes (climate change) and describes their effects (environmental and social impacts)."
+    },
+    {
+      id: "rw25",
+      stem: "The word 'cascade' in the context of environmental changes most nearly means:",
+      choices: ["waterfall", "series of interconnected effects", "rapid decline", "unexpected change"], ans: 1, diff: 2,
+      expl: "In this context, 'cascade' refers to a series of effects where one change triggers another in a chain reaction."
     }
-
-    // Continue with additional high-quality questions up to 250...
-    // For brevity, I'll add a few more key examples and indicate the pattern continues
   ],
   
   mixed: []
 };
 
-// Generate comprehensive question banks
-function generateFullBank() {
-  const expandedBanks = { math: [], rw: [], mixed: [] };
-  
-  // Math: Generate 250 diverse questions across all topics
-  const mathTopics = [
-    'linear equations', 'quadratic functions', 'polynomials', 'rational functions',
-    'exponential functions', 'logarithmic functions', 'trigonometry', 'geometry',
-    'statistics', 'probability', 'sequences', 'calculus basics'
-  ];
-  
-  // Start with base questions and generate variations
-  const baseMathQuestions = questionBanks.math.length;
-  expandedBanks.math = [...questionBanks.math];
-  
-  // Generate additional math questions to reach 250
-  for(let i = baseMathQuestions; i < 250; i++) {
-    const topicIndex = i % mathTopics.length;
-    const topic = mathTopics[topicIndex];
-    
-    let newQuestion = generateMathQuestion(topic, i + 1);
-    expandedBanks.math.push(newQuestion);
-  }
-  
-  // RW: Generate 250 diverse questions across all English topics
-  const rwTopics = [
-    'grammar', 'punctuation', 'sentence structure', 'word choice',
-    'reading comprehension', 'literary analysis', 'rhetoric', 'argument analysis'
-  ];
-  
-  const baseRWQuestions = questionBanks.rw.length;
-  expandedBanks.rw = [...questionBanks.rw];
-  
-  // Generate additional RW questions to reach 250
-  for(let i = baseRWQuestions; i < 250; i++) {
-    const topicIndex = i % rwTopics.length;
-    const topic = rwTopics[topicIndex];
-    
-    let newQuestion = generateRWQuestion(topic, i + 1);
-    expandedBanks.rw.push(newQuestion);
-  }
-  
-  // Mixed: Combine both sections
-  for(let i = 0; i < 125; i++) {
-    expandedBanks.mixed.push(expandedBanks.math[i]);
-    expandedBanks.mixed.push(expandedBanks.rw[i]);
-  }
-  
-  return expandedBanks;
-}
-
-// Question generation functions
-function generateMathQuestion(topic, id) {
-  const templates = {
-    'linear equations': () => ({
-      id: `m${id}`,
-      stem: generateLinearEquationProblem(),
-      choices: generateLinearChoices(),
-      ans: 0,
-      diff: Math.floor(Math.random() * 3) + 1,
-      expl: "Solve by isolating the variable through inverse operations."
-    }),
-    'geometry': () => ({
-      id: `m${id}`,
-      stem: generateGeometryProblem(),
-      choices: generateGeometryChoices(),
-      ans: 0,
-      diff: Math.floor(Math.random() * 3) + 1,
-      expl: "Apply appropriate geometric formulas and theorems."
-    }),
-    'statistics': () => ({
-      id: `m${id}`,
-      stem: generateStatsProblem(),
-      choices: generateStatsChoices(),
-      ans: 0,
-      diff: Math.floor(Math.random() * 3) + 1,
-      expl: "Use statistical measures and probability principles."
-    })
-  };
-  
-  const generator = templates[topic] || templates['linear equations'];
-  return generator();
-}
-
-function generateRWQuestion(topic, id) {
-  const templates = {
-    'grammar': () => ({
-      id: `rw${id}`,
-      stem: generateGrammarProblem(),
-      choices: generateGrammarChoices(),
-      ans: 0,
-      diff: Math.floor(Math.random() * 3) + 1,
-      expl: "Apply rules of standard written English."
-    }),
-    'reading comprehension': () => ({
-      id: `rw${id}`,
-      stem: generateReadingProblem(),
-      choices: generateReadingChoices(),
-      ans: 0,
-      diff: Math.floor(Math.random() * 3) + 1,
-      expl: "Analyze the passage to understand the author's purpose and meaning."
-    })
-  };
-  
-  const generator = templates[topic] || templates['grammar'];
-  return generator();
-}
-
-// Helper functions for question generation
-function generateLinearEquationProblem() {
-  const a = Math.floor(Math.random() * 9) + 2;
-  const b = Math.floor(Math.random() * 20) + 1;
-  const c = Math.floor(Math.random() * 50) + 10;
-  return `If ${a}x + ${b} = ${c}, what is the value of x?`;
-}
-
-function generateLinearChoices() {
-  const correct = Math.floor(Math.random() * 20) + 1;
-  const wrong1 = correct + Math.floor(Math.random() * 5) + 1;
-  const wrong2 = Math.max(1, correct - Math.floor(Math.random() * 5) - 1);
-  const wrong3 = correct * 2;
-  return [correct.toString(), wrong1.toString(), wrong2.toString(), wrong3.toString()];
-}
-
-function generateGeometryProblem() {
-  const problems = [
-    "A rectangle has length 12 cm and width 8 cm. What is its area?",
-    "A circle has radius 7 cm. What is its circumference? (Use π ≈ 3.14)",
-    "A triangle has base 10 ft and height 6 ft. What is its area?"
-  ];
-  return problems[Math.floor(Math.random() * problems.length)];
-}
-
-function generateGeometryChoices() {
-  return ["96", "84", "108", "72"];
-}
-
-function generateStatsProblem() {
-  return "In a class of 30 students, 18 play sports, 12 play music, and 6 play both. How many students play neither sports nor music?";
-}
-
-function generateStatsChoices() {
-  return ["6", "8", "10", "12"];
-}
-
-function generateGrammarProblem() {
-  const problems = [
-    "The committee ___ meeting tomorrow to discuss the new policy.",
-    "Between you and ___, this project needs more time.",
-    "The data ___ compelling evidence for the hypothesis."
-  ];
-  return problems[Math.floor(Math.random() * problems.length)];
-}
-
-function generateGrammarChoices() {
-  const choiceSets = [
-    ["is", "are", "was", "were"],
-    ["I", "me", "myself", "mine"],
-    ["provides", "provide", "providing", "provided"]
-  ];
-  return choiceSets[Math.floor(Math.random() * choiceSets.length)];
-}
-
-function generateReadingProblem() {
-  return "Based on the passage, the author's primary purpose is to:";
-}
-
-function generateReadingChoices() {
-  return [
-    "inform readers about a complex topic",
-    "persuade readers to take action",
-    "entertain with an amusing story", 
-    "criticize opposing viewpoints"
-  ];
-}
-
-const bank = generateFullBank();
+// Generate mixed questions by combining math and rw
+questionBanks.mixed = [...questionBanks.math.slice(0, 12), ...questionBanks.rw.slice(0, 13)];
 
 // Test state management
 let state = {
@@ -686,121 +447,157 @@ let state = {
   timer: null,
   timeLeft: 0,
   finished: false,
-  calculator: null
+  testStarted: false
 };
 
-// Initialize Desmos calculator for math sections
-function initCalculator() {
-  if(state.calculator) return;
+// Initialize event listeners
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('startBtn').addEventListener('click', startTest);
+  document.getElementById('resetBtn').addEventListener('click', resetTest);
+  document.getElementById('exportBtn').addEventListener('click', exportResults);
+  document.getElementById('importBtn').addEventListener('click', importQuestions);
+  document.getElementById('toggleAI').addEventListener('click', openAIHelper);
+  document.getElementById('calcBtn').addEventListener('click', openCalculator);
+});
+
+function startTest() {
+  state.section = document.getElementById('section').value;
+  state.adaptive = document.getElementById('adaptive').checked;
+  state.timed = document.getElementById('timed').checked;
+  state.testStarted = true;
+  state.module = 1;
+  state.answers = {};
+  state.correct = 0;
+  state.attempted = 0;
+  state.finished = false;
   
-  const calculatorElement = document.getElementById('calculator');
-  try {
-    state.calculator = Desmos.GraphingCalculator(calculatorElement, {
-      expressions: false,
-      settingsMenu: false,
-      zoomButtons: true,
-      expressionsTopbar: true,
-      pointsOfInterest: true,
-      trace: true,
-      border: false,
-      lockViewport: false
-    });
-    
-    // Add some example functions for testing
-    state.calculator.setExpression({ id: 'graph1', latex: 'y=x^2' });
-  } catch(error) {
-    console.error('Failed to initialize Desmos calculator:', error);
-    document.getElementById('calculator').innerHTML = '<p style="color: var(--muted); text-align: center; padding: 20px;">Calculator failed to load. Please refresh the page.</p>';
+  renderModule();
+  showNotification('Test generated successfully!');
+}
+
+function resetTest() {
+  clearInterval(state.timer);
+  state = {
+    section: 'rw',
+    module: 1, 
+    current: [],
+    answers: {},
+    correct: 0,
+    attempted: 0,
+    timed: false,
+    adaptive: false,
+    perModule: 25,
+    timer: null,
+    timeLeft: 0,
+    finished: false,
+    testStarted: false
+  };
+  
+  document.getElementById('section').value = 'rw';
+  document.getElementById('adaptive').checked = false;
+  document.getElementById('timed').checked = false;
+  document.getElementById('correct').textContent = '0';
+  document.getElementById('scaled').textContent = '—';
+  document.getElementById('mnum').textContent = '–';
+  document.getElementById('progress').textContent = 'Ready to Start';
+  document.getElementById('clock').classList.add('hidden');
+  
+  const testArea = document.getElementById('testArea');
+  testArea.innerHTML = `
+    <h3 style="color:var(--fg);margin:0 0 16px">Click "Generate Test" to begin your SAT practice</h3>
+    <p style="color:var(--muted)">Select your preferences above and start practicing with real SAT-style questions.</p>
+  `;
+  
+  showNotification('Test reset successfully!');
+}
+
+function exportResults() {
+  if (!state.testStarted) {
+    showNotification('No test data to export. Start a test first!', 'error');
+    return;
   }
+  
+  const results = {
+    section: state.section,
+    module: state.module,
+    correct: state.correct,
+    attempted: state.attempted,
+    score: estimateScore(),
+    answers: state.answers,
+    timestamp: new Date().toISOString()
+  };
+  
+  const dataStr = JSON.stringify(results, null, 2);
+  const dataBlob = new Blob([dataStr], {type: 'application/json'});
+  const url = URL.createObjectURL(dataBlob);
+  
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `sat-practice-results-${new Date().toISOString().split('T')[0]}.json`;
+  link.click();
+  
+  URL.revokeObjectURL(url);
+  showNotification('Results exported successfully!');
 }
 
-function toggleCalculator() {
-  const container = document.getElementById('calculatorContainer');
-  container.classList.toggle('hidden');
+function importQuestions() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = function(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.questions && Array.isArray(data.questions)) {
+            // Add imported questions to the appropriate bank
+            const section = data.section || 'rw';
+            questionBanks[section] = [...questionBanks[section], ...data.questions];
+            showNotification(`Imported ${data.questions.length} questions successfully!`);
+          } else {
+            showNotification('Invalid question file format!', 'error');
+          }
+        } catch (error) {
+          showNotification('Error reading file!', 'error');
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+  input.click();
+}
+
+function openAIHelper() {
+  window.open('https://math-gpt.org/?gad_source=1&gad_campaignid=22392891529&gbraid=0AAAAA_KEbsxuugBcbtpA5SSWHJqF3s9gA&gclid=Cj0KCQjw18bEBhCBARIsAKuAFEYnzEG5_qsyg9jeP7K6IyWK_s0H-lyFgXvi8CXZl_AQm-ASuRTj7GcaAlgQEALw_wcB', '_blank');
+}
+
+function openCalculator() {
+  window.open('https://www.desmos.com/practice', '_blank');
+}
+
+function showNotification(message, type = 'success') {
+  const notification = document.getElementById('notification');
+  notification.textContent = message;
+  notification.className = `notification ${type === 'error' ? 'error' : ''}`;
+  notification.classList.add('show');
   
-  if(!container.classList.contains('hidden') && !state.calculator) {
-    setTimeout(() => initCalculator(), 100);
+  if (type === 'error') {
+    notification.style.background = 'var(--danger)';
+    notification.style.color = 'white';
+  } else {
+    notification.style.background = 'var(--accent)';
+    notification.style.color = '#071126';
   }
-}
-
-// AI Assistant Functions
-function toggleAI() {
-  const aiHelper = document.getElementById('aiHelper');
-  aiHelper.classList.toggle('hidden');
-}
-
-async function askAI() {
-  const input = document.getElementById('aiInput');
-  const response = document.getElementById('aiResponse');
-  const question = input.value.trim();
   
-  if(!question) return;
-  
-  response.innerHTML = "🤔 Thinking...";
-  
-  // Enhanced AI responses with more specific help
   setTimeout(() => {
-    const responses = {
-      algebra: [
-        "For linear equations like ax + b = c, isolate x by doing the opposite operations in reverse order. First subtract/add b, then divide by a.",
-        "When solving systems of equations, try substitution or elimination. Substitution works well when one variable is already isolated.",
-        "For quadratic equations, try factoring first. If that doesn't work, use the quadratic formula: x = (-b ± √(b² - 4ac)) / 2a",
-        "Remember PEMDAS when simplifying expressions: Parentheses, Exponents, Multiplication/Division (left to right), Addition/Subtraction (left to right)."
-      ],
-      geometry: [
-        "For area problems, identify the shape first. Rectangle: A = lw, Triangle: A = ½bh, Circle: A = πr²",
-        "Pythagorean theorem (a² + b² = c²) only works for RIGHT triangles, where c is the hypotenuse.",
-        "When finding perimeter, add all the sides. For area, you're measuring the space inside the shape.",
-        "Similar triangles have proportional sides. Set up proportions to solve for missing measurements."
-      ],
-      trigonometry: [
-        "SOH-CAH-TOA: Sin = Opposite/Hypotenuse, Cos = Adjacent/Hypotenuse, Tan = Opposite/Adjacent",
-        "Special angles to memorize: sin(30°) = ½, sin(45°) = √2/2, sin(60°) = √3/2",
-        "Use unit circle for angles greater than 90°. Remember quadrant signs: All Students Take Calculus (All positive, Sin positive, Tan positive, Cos positive)."
-      ],
-      statistics: [
-        "Mean = sum of all values ÷ number of values. Median = middle value when ordered. Mode = most frequent value.",
-        "For probability, use P(event) = favorable outcomes / total possible outcomes",
-        "Standard deviation measures spread. Larger SD means more spread out data."
-      ],
-      grammar: [
-        "Subject-verb agreement: Singular subjects take singular verbs, plural subjects take plural verbs. Watch out for prepositional phrases that separate subject and verb.",
-        "Who vs. Whom: Use 'who' for subjects (Who is coming?), 'whom' for objects (To whom are you speaking?).",
-        "Comma rules: Use commas to separate items in a series, before coordinating conjunctions in compound sentences, and to set off non-essential information."
-      ],
-      reading: [
-        "For main idea questions, look at the topic sentence and conclusion. The main idea is what the whole passage is about.",
-        "For inference questions, the answer isn't directly stated but can be concluded from the information given.",
-        "Pay attention to transition words: 'however' shows contrast, 'therefore' shows cause-effect, 'furthermore' adds information."
-      ],
-      writing: [
-        "For revision questions, choose the option that is clear, concise, and grammatically correct.",
-        "Parallel structure means using the same grammatical form: 'I like reading, writing, and studying' (all -ing forms).",
-        "Avoid wordiness. 'Due to the fact that' can usually be replaced with 'because'."
-      ]
-    };
-    
-    let responseType = 'grammar';
-    const lowerQ = question.toLowerCase();
-    
-    if(lowerQ.includes('equation') || lowerQ.includes('solve') || lowerQ.includes('algebra')) responseType = 'algebra';
-    if(lowerQ.includes('triangle') || lowerQ.includes('circle') || lowerQ.includes('area') || lowerQ.includes('geometry')) responseType = 'geometry';
-    if(lowerQ.includes('sin') || lowerQ.includes('cos') || lowerQ.includes('tan') || lowerQ.includes('trigonometry')) responseType = 'trigonometry';
-    if(lowerQ.includes('mean') || lowerQ.includes('median') || lowerQ.includes('probability') || lowerQ.includes('statistics')) responseType = 'statistics';
-    if(lowerQ.includes('grammar') || lowerQ.includes('verb') || lowerQ.includes('subject')) responseType = 'grammar';
-    if(lowerQ.includes('passage') || lowerQ.includes('reading') || lowerQ.includes('comprehension')) responseType = 'reading';
-    if(lowerQ.includes('writing') || lowerQ.includes('revision') || lowerQ.includes('sentence')) responseType = 'writing';
-    
-    const randomResponse = responses[responseType][Math.floor(Math.random() * responses[responseType].length)];
-    response.innerHTML = `💡 ${randomResponse}`;
-  }, 1500);
-  
-  input.value = '';
+    notification.classList.remove('show');
+  }, 3000);
 }
 
-// Question selection and rendering
 function selectQuestions(section, difficulty = 'mixed') {
-  const pool = bank[section] || bank.rw;
+  const pool = questionBanks[section] || questionBanks.rw;
   const selected = [];
   
   // Select 25 questions with appropriate difficulty distribution
@@ -830,7 +627,7 @@ function selectQuestions(section, difficulty = 'mixed') {
   if(hard.length >= hardCount) selected.push(...shuffleArray(hard).slice(0, hardCount));
   
   // Fill remaining slots if needed
-  while(selected.length < 25) {
+  while(selected.length < 25 && selected.length < pool.length) {
     const remaining = shuffleArray(pool.filter(q => !selected.some(s => s.id === q.id)));
     if(remaining.length > 0) {
       selected.push(remaining[0]);
@@ -859,14 +656,6 @@ function renderModule() {
   
   state.current = selectQuestions(sec, difficulty);
   area.innerHTML = '';
-  
-  // Show calculator for math sections
-  if(sec === 'math') {
-    document.getElementById('calcBtn').style.display = 'inline-block';
-  } else {
-    document.getElementById('calcBtn').style.display = 'none';
-    document.getElementById('calculatorContainer').classList.add('hidden');
-  }
   
   document.getElementById('mnum').textContent = state.module;
   document.getElementById('progress').textContent = 
@@ -1051,4 +840,61 @@ function showModuleResults() {
     
     const resultBlock = document.createElement('div');
     resultBlock.className = 'q';
-    resultBlock.style.borderLeft = `4px solid var(--${isCorrect ? 'accent'
+    resultBlock.style.borderLeft = `4px solid var(--${isCorrect ? 'accent' : 'danger'})`;
+    
+    // Question stem
+    if(question.stem.includes('\n\n')) {
+      const parts = question.stem.split('\n\n');
+      const passage = parts[0];
+      const questionText = parts.slice(1).join('\n\n');
+      
+      resultBlock.innerHTML = `
+        <div class="passage">${escapeHtml(passage)}</div>
+        <h4>Question ${index + 1}. ${escapeHtml(questionText)} ${isCorrect ? '✓' : '✗'}</h4>
+      `;
+    } else {
+      resultBlock.innerHTML = `<h4>Question ${index + 1}. ${escapeHtml(question.stem)} ${isCorrect ? '✓' : '✗'}</h4>`;
+    }
+    
+    // Answer choices with highlighting
+    const opts = document.createElement('div');
+    opts.className = 'opt';
+    
+    question.choices.forEach((choice, i) => {
+      const label = document.createElement('label');
+      label.innerHTML = `
+        <input type="radio" name="${question.id}_result" value="${i}" disabled ${i === userAnswer ? 'checked' : ''}/>
+        <div>${escapeHtml(choice)}</div>
+      `;
+      
+      if (i === correctAnswer) {
+        label.classList.add('correct');
+      } else if (i === userAnswer && userAnswer !== correctAnswer) {
+        label.classList.add('incorrect');
+      }
+      
+      opts.appendChild(label);
+    });
+    
+    resultBlock.appendChild(opts);
+    
+    // Explanation
+    const explanation = document.createElement('div');
+    explanation.className = 'explanation';
+    explanation.innerHTML = `<strong>Explanation:</strong> ${escapeHtml(question.expl)}`;
+    resultBlock.appendChild(explanation);
+    
+    results.appendChild(resultBlock);
+  });
+  
+  area.appendChild(results);
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+</script>
+</body>
+</html>
